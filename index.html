@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Routing — Mixer / Sampler / Interface</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 60px;
+  }
+  h1 span { color: #ff6b35; }
+  .diagram-section {
+    max-width: 1000px;
+    margin: 0 auto 80px;
+    background: #12121a;
+    border: 1px solid #1e1e2e;
+    border-radius: 16px;
+    padding: 40px;
+    position: relative;
+  }
+  .diagram-section::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -18px;
+    left: 30px;
+    background: #ff6b35;
+    color: #0a0a0f;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+  }
+  .diagram-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .diagram-desc {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 30px;
+    line-height: 1.5;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  /* Shared SVG styles */
+  .device-box { rx: 10; ry: 10; }
+  .device-label {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    fill: #fff;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .device-sub {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    fill: #999;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .signal-label {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 10px;
+    fill: #aaa;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .signal-type {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  /* Animations */
+  @keyframes flowRight {
+    0% { stroke-dashoffset: 20; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes flowLeft {
+    0% { stroke-dashoffset: -20; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes flowDown {
+    0% { stroke-dashoffset: 20; }
+    100% { stroke-dashoffset: 0; }
+  }
+  .flow-right {
+    stroke-dasharray: 10 10;
+    animation: flowRight 0.8s linear infinite;
+  }
+  .flow-left {
+    stroke-dasharray: 10 10;
+    animation: flowLeft 0.8s linear infinite;
+  }
+  .flow-down {
+    stroke-dasharray: 10 10;
+    animation: flowDown 0.8s linear infinite;
+  }
+
+  .legend {
+    max-width: 1000px;
+    margin: 0 auto 60px;
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: #888;
+  }
+  .legend-line {
+    width: 40px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .legend-audio { background: #ff6b35; }
+  .legend-digital { background: #35b8ff; }
+  .legend-monitor { background: #4ecb71; }
+
+  footer {
+    text-align: center;
+    color: #444;
+    font-size: 0.75rem;
+    margin-top: 40px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Signal <span>Routing</span> Diagrams</h1>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-line legend-audio"></div> Analog Audio</div>
+  <div class="legend-item"><div class="legend-line legend-digital"></div> Digital / USB Audio</div>
+  <div class="legend-item"><div class="legend-line legend-monitor"></div> Monitor Output</div>
+</div>
+
+<!-- ─── DIAGRAM 1 ─── -->
+<div class="diagram-section" data-num="Example 1 — Basic">
+  <div class="diagram-title">Hardware Sampler → Analog Mixer</div>
+  <div class="diagram-desc">
+    Simplest setup. Sampler stereo outputs go straight into a stereo channel on the mixer.
+    Mixer main outs go to monitors.
+  </div>
+  <svg viewBox="0 0 900 220">
+    <defs>
+      <marker id="arrow1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#ff6b35"/>
+      </marker>
+      <marker id="arrow1g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#4ecb71"/>
+      </marker>
+    </defs>
+
+    <!-- Sampler -->
+    <rect x="60" y="70" width="200" height="80" fill="#1a1a2e" stroke="#ff6b35" stroke-width="2" class="device-box"/>
+    <text x="160" y="102" class="device-label">HARDWARE SAMPLER</text>
+    <text x="160" y="122" class="device-sub">e.g. Digitakt / S1000</text>
+    <text x="160" y="60" class="signal-type" fill="#ff6b35">AUDIO SOURCE</text>
+
+    <!-- Arrow: Sampler → Mixer -->
+    <line x1="260" y1="110" x2="430" y2="110" stroke="#ff6b35" stroke-width="3" marker-end="url(#arrow1)" class="flow-right"/>
+    <text x="345" y="96" class="signal-label">L/R Out → Ch Input</text>
+    <text x="345" y="130" class="signal-type" fill="#ff6b35">¼″ TRS or TS</text>
+
+    <!-- Mixer -->
+    <rect x="440" y="70" width="200" height="80" fill="#1a1a2e" stroke="#ff6b35" stroke-width="2" class="device-box"/>
+    <text x="540" y="102" class="device-label">ANALOG MIXER</text>
+    <text x="540" y="122" class="device-sub">Stereo Channel Strip</text>
+
+    <!-- Arrow: Mixer → Monitors -->
+    <line x1="640" y1="110" x2="740" y2="110" stroke="#4ecb71" stroke-width="3" marker-end="url(#arrow1g)" class="flow-right"/>
+    <text x="690" y="96" class="signal-label">Main Out</text>
+
+    <!-- Monitors -->
+    <rect x="750" y="80" width="100" height="60" fill="#1a1a2e" stroke="#4ecb71" stroke-width="2" class="device-box"/>
+    <text x="800" y="110" class="device-label" font-size="12">MONITORS</text>
+  </svg>
+</div>
+
+<!-- ─── DIAGRAM 2 ─── -->
+<div class="diagram-section" data-num="Example 2 — Hybrid">
+  <div class="diagram-title">Ableton Aux Tracks → Audio Interface → Mixer</div>
+  <div class="diagram-desc">
+    Ableton sends individual aux/stem tracks out via the audio interface's multiple outputs.
+    Each output pair feeds a channel on the analog mixer — giving you hands-on control of the DAW mix.
+  </div>
+  <svg viewBox="0 0 900 360">
+    <defs>
+      <marker id="arrow2b" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#35b8ff"/>
+      </marker>
+      <marker id="arrow2a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#ff6b35"/>
+      </marker>
+      <marker id="arrow2g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#4ecb71"/>
+      </marker>
+    </defs>
+
+    <!-- Ableton / Computer -->
+    <rect x="40" y="30" width="180" height="300" fill="#1a1a2e" stroke="#35b8ff" stroke-width="2" class="device-box"/>
+    <text x="130" y="60" class="device-label">ABLETON LIVE</text>
+    <text x="130" y="80" class="device-sub">(Computer / DAW)</text>
+
+    <!-- Aux tracks inside Ableton -->
+    <rect x="60" y="100" width="140" height="34" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="6"/>
+    <text x="130" y="118" class="device-sub" fill="#35b8ff">Aux 1 — Drums</text>
+
+    <rect x="60" y="148" width="140" height="34" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="6"/>
+    <text x="130" y="166" class="device-sub" fill="#35b8ff">Aux 2 — Bass</text>
+
+    <rect x="60" y="196" width="140" height="34" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="6"/>
+    <text x="130" y="214" class="device-sub" fill="#35b8ff">Aux 3 — Pads</text>
+
+    <rect x="60" y="244" width="140" height="34" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="6"/>
+    <text x="130" y="262" class="device-sub" fill="#35b8ff">Aux 4 — FX</text>
+
+    <!-- USB Arrow -->
+    <line x1="220" y1="180" x2="330" y2="180" stroke="#35b8ff" stroke-width="3" marker-end="url(#arrow2b)" class="flow-right"/>
+    <text x="275" y="166" class="signal-label">USB Audio</text>
+    <text x="275" y="200" class="signal-type" fill="#35b8ff">MULTI-OUT</text>
+
+    <!-- Audio Interface -->
+    <rect x="340" y="60" width="200" height="240" fill="#1a1a2e" stroke="#35b8ff" stroke-width="2" class="device-box"/>
+    <text x="440" y="90" class="device-label">AUDIO INTERFACE</text>
+    <text x="440" y="108" class="device-sub">e.g. Scarlett 18i20</text>
+
+    <!-- Interface outputs -->
+    <rect x="360" y="130" width="160" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="440" y="145" class="device-sub" fill="#ff6b35">Out 1-2 → Drums</text>
+
+    <rect x="360" y="168" width="160" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="440" y="183" class="device-sub" fill="#ff6b35">Out 3-4 → Bass</text>
+
+    <rect x="360" y="206" width="160" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="440" y="221" class="device-sub" fill="#ff6b35">Out 5-6 → Pads</text>
+
+    <rect x="360" y="244" width="160" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="440" y="259" class="device-sub" fill="#ff6b35">Out 7-8 → FX</text>
+
+    <!-- Analog arrows to mixer -->
+    <line x1="540" y1="144" x2="640" y2="110" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow2a)" class="flow-right"/>
+    <line x1="540" y1="182" x2="640" y2="158" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow2a)" class="flow-right"/>
+    <line x1="540" y1="220" x2="640" y2="206" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow2a)" class="flow-right"/>
+    <line x1="540" y1="258" x2="640" y2="254" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow2a)" class="flow-right"/>
+    <text x="590" y="86" class="signal-type" fill="#ff6b35">¼″ TRS ANALOG</text>
+
+    <!-- Mixer -->
+    <rect x="650" y="80" width="200" height="210" fill="#1a1a2e" stroke="#ff6b35" stroke-width="2" class="device-box"/>
+    <text x="750" y="102" class="device-label">ANALOG MIXER</text>
+
+    <rect x="670" y="118" width="160" height="24" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="750" y="131" class="device-sub" fill="#ccc">Ch 1-2: Drums</text>
+
+    <rect x="670" y="152" width="160" height="24" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="750" y="165" class="device-sub" fill="#ccc">Ch 3-4: Bass</text>
+
+    <rect x="670" y="186" width="160" height="24" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="750" y="199" class="device-sub" fill="#ccc">Ch 5-6: Pads</text>
+
+    <rect x="670" y="220" width="160" height="24" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="6"/>
+    <text x="750" y="233" class="device-sub" fill="#ccc">Ch 7-8: FX</text>
+
+    <!-- Monitor out -->
+    <line x1="750" y1="290" x2="750" y2="340" stroke="#4ecb71" stroke-width="3" marker-end="url(#arrow2g)" class="flow-down"/>
+    <text x="790" y="320" class="signal-label">Main Out → Monitors</text>
+  </svg>
+</div>
+
+<!-- ─── DIAGRAM 3 ─── -->
+<div class="diagram-section" data-num="Example 3 — Full Setup with Patchbay">
+  <div class="diagram-title">Ableton + Interface + Hardware Sampler → Patchbay → Mixer</div>
+  <div class="diagram-desc">
+    Everything routes through a patchbay first. The patchbay normalises connections so you can
+    repatch on the fly without reaching behind gear. Interface outputs and sampler outputs all
+    land on the patchbay — the patchbay's outputs feed the mixer channels.
+  </div>
+  <svg viewBox="0 0 900 560">
+    <defs>
+      <marker id="arrow3b" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#35b8ff"/>
+      </marker>
+      <marker id="arrow3a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#ff6b35"/>
+      </marker>
+      <marker id="arrow3g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#4ecb71"/>
+      </marker>
+      <marker id="arrow3d" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#ff6b35" opacity="0.6"/>
+      </marker>
+      <marker id="arrow3down" markerWidth="6" markerHeight="8" refX="3" refY="8" orient="auto">
+        <polygon points="0 0, 6 0, 3 8" fill="#ff6b35"/>
+      </marker>
+    </defs>
+
+    <!-- ── TOP ROW: Sources ── -->
+
+    <!-- Ableton -->
+    <rect x="30" y="20" width="160" height="140" fill="#1a1a2e" stroke="#35b8ff" stroke-width="2" class="device-box"/>
+    <text x="110" y="48" class="device-label">ABLETON</text>
+    <text x="110" y="66" class="device-sub">Aux Tracks</text>
+    <rect x="46" y="82" width="128" height="22" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="5"/>
+    <text x="110" y="94" class="device-sub" fill="#35b8ff">Drums / Bass / Pads / FX</text>
+    <rect x="46" y="114" width="128" height="22" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="5"/>
+    <text x="110" y="126" class="device-sub" fill="#35b8ff">Multi-out routing</text>
+
+    <!-- USB Arrow -->
+    <line x1="190" y1="90" x2="290" y2="90" stroke="#35b8ff" stroke-width="3" marker-end="url(#arrow3b)" class="flow-right"/>
+    <text x="240" y="78" class="signal-label">USB</text>
+
+    <!-- Audio Interface -->
+    <rect x="300" y="20" width="200" height="140" fill="#1a1a2e" stroke="#35b8ff" stroke-width="2" class="device-box"/>
+    <text x="400" y="48" class="device-label">AUDIO INTERFACE</text>
+    <text x="400" y="66" class="device-sub">Multiple Analog Outputs</text>
+    <rect x="316" y="84" width="168" height="22" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="400" y="96" class="device-sub" fill="#ff6b35">Out 1-8 → Patchbay</text>
+    <rect x="316" y="114" width="168" height="22" fill="#0d1b2a" stroke="#35b8ff" stroke-width="1" rx="5"/>
+    <text x="400" y="126" class="device-sub" fill="#35b8ff">In 1-2 ← Mixer Return</text>
+
+    <!-- Hardware Sampler -->
+    <rect x="600" y="20" width="200" height="140" fill="#1a1a2e" stroke="#ff6b35" stroke-width="2" class="device-box"/>
+    <text x="700" y="48" class="device-label">HARDWARE SAMPLER</text>
+    <text x="700" y="66" class="device-sub">e.g. Digitakt / S1000</text>
+    <rect x="616" y="84" width="168" height="22" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="700" y="96" class="device-sub" fill="#ff6b35">L/R Out → Patchbay</text>
+    <rect x="616" y="114" width="168" height="22" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="700" y="126" class="device-sub" fill="#ff6b35">Individual Outs (opt.)</text>
+
+    <!-- ── ARROWS DOWN TO PATCHBAY ── -->
+
+    <!-- Interface outputs down -->
+    <line x1="360" y1="160" x2="360" y2="240" stroke="#ff6b35" stroke-width="2.5" marker-end="url(#arrow3down)" class="flow-down"/>
+    <line x1="440" y1="160" x2="440" y2="240" stroke="#ff6b35" stroke-width="2.5" marker-end="url(#arrow3down)" class="flow-down"/>
+    <text x="400" y="195" class="signal-type" fill="#ff6b35">¼″ TRS</text>
+
+    <!-- Sampler outputs down -->
+    <line x1="660" y1="160" x2="660" y2="240" stroke="#ff6b35" stroke-width="2.5" marker-end="url(#arrow3down)" class="flow-down"/>
+    <line x1="740" y1="160" x2="740" y2="240" stroke="#ff6b35" stroke-width="2.5" marker-end="url(#arrow3down)" class="flow-down"/>
+    <text x="700" y="195" class="signal-type" fill="#ff6b35">¼″ TS/TRS</text>
+
+    <!-- ── PATCHBAY ── -->
+    <rect x="100" y="250" width="700" height="100" fill="#1e1028" stroke="#c77dff" stroke-width="2" class="device-box"/>
+    <text x="450" y="278" class="device-label" fill="#c77dff">P A T C H B A Y</text>
+    <text x="450" y="296" class="device-sub">Normalled — rear inputs pass through to front outputs unless overridden</text>
+
+    <!-- Patchbay rows -->
+    <rect x="130" y="310" width="640" height="14" fill="#0d0d1a" stroke="#c77dff" stroke-width="0.5" rx="3"/>
+    <text x="450" y="319" class="device-sub" fill="#c77dff" font-size="8">TOP ROW (inputs): Interface Outs 1-8  |  Sampler L  |  Sampler R  |  Sampler Individual Outs</text>
+    <rect x="130" y="328" width="640" height="14" fill="#0d0d1a" stroke="#c77dff" stroke-width="0.5" rx="3"/>
+    <text x="450" y="337" class="device-sub" fill="#c77dff" font-size="8">BOTTOM ROW (outputs): → Mixer Ch 1-2  |  Ch 3-4  |  Ch 5-6  |  Ch 7-8  |  Ch 9-10  |  Ch 11-12</text>
+
+    <!-- ── ARROWS DOWN TO MIXER ── -->
+    <line x1="250" y1="350" x2="250" y2="410" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow3down)" class="flow-down"/>
+    <line x1="370" y1="350" x2="370" y2="410" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow3down)" class="flow-down"/>
+    <line x1="490" y1="350" x2="490" y2="410" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow3down)" class="flow-down"/>
+    <line x1="610" y1="350" x2="610" y2="410" stroke="#ff6b35" stroke-width="2" marker-end="url(#arrow3down)" class="flow-down"/>
+    <text x="450" y="390" class="signal-type" fill="#ff6b35">NORMALLED → MIXER CHANNELS</text>
+
+    <!-- ── MIXER ── -->
+    <rect x="150" y="420" width="600" height="120" fill="#1a1a2e" stroke="#ff6b35" stroke-width="2" class="device-box"/>
+    <text x="450" y="448" class="device-label">ANALOG MIXER</text>
+
+    <!-- Channel strips -->
+    <rect x="175" y="462" width="80" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="215" y="477" class="device-sub" fill="#ccc">Ch 1-2</text>
+    <text x="215" y="500" class="device-sub" fill="#666" font-size="8">Drums</text>
+
+    <rect x="270" y="462" width="80" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="310" y="477" class="device-sub" fill="#ccc">Ch 3-4</text>
+    <text x="310" y="500" class="device-sub" fill="#666" font-size="8">Bass</text>
+
+    <rect x="365" y="462" width="80" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="405" y="477" class="device-sub" fill="#ccc">Ch 5-6</text>
+    <text x="405" y="500" class="device-sub" fill="#666" font-size="8">Pads</text>
+
+    <rect x="460" y="462" width="80" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="500" y="477" class="device-sub" fill="#ccc">Ch 7-8</text>
+    <text x="500" y="500" class="device-sub" fill="#666" font-size="8">FX</text>
+
+    <rect x="555" y="462" width="80" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="595" y="477" class="device-sub" fill="#ccc">Ch 9-10</text>
+    <text x="595" y="500" class="device-sub" fill="#666" font-size="8">Sampler L/R</text>
+
+    <rect x="650" y="462" width="80" height="28" fill="#0d1b2a" stroke="#ff6b35" stroke-width="1" rx="5"/>
+    <text x="690" y="477" class="device-sub" fill="#ccc">Ch 11-12</text>
+    <text x="690" y="500" class="device-sub" fill="#666" font-size="8">Sampler Ind.</text>
+
+    <!-- Monitor out + record return -->
+    <line x1="450" y1="540" x2="550" y2="548" stroke="#4ecb71" stroke-width="3" marker-end="url(#arrow3g)"/>
+    <text x="560" y="555" class="signal-label" text-anchor="start" fill="#4ecb71">Main Out → Monitors</text>
+
+    <!-- Record return to interface -->
+    <path d="M 250 540 L 250 555 Q 250 560 245 560 L 80 560 Q 70 560 70 550 L 70 90 Q 70 80 80 80 L 296 80"
+          fill="none" stroke="#35b8ff" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow3b)" opacity="0.6"/>
+    <text x="60" y="400" class="signal-label" fill="#35b8ff" text-anchor="end" transform="rotate(-90 60 400)">Mixer Main → Interface In (record back)</text>
+  </svg>
+</div>
+
+<footer>Signal Routing Reference — 2026</footer>
+
+</body>
+</html>
