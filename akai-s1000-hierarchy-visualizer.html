@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Akai S1000 / S1100 Storage Hierarchy</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --panel: #16161a;
+    --panel-2: #1c1c22;
+    --ink: #e7e7ea;
+    --muted: #8b8b93;
+    --line: #2a2a31;
+    --drive: #c9a86a;
+    --partition: #6aa3c9;
+    --volume: #8cc96a;
+    --program: #c96a8c;
+    --sample: #6ac9c1;
+    --warn: #d35d5d;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 28px 80px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin: 0 0 4px;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 32px;
+  }
+
+  /* nested container blocks */
+  .block {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: 14px 0;
+    background: var(--panel);
+    overflow: hidden;
+  }
+  .block.inner { background: var(--panel-2); }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .body { padding: 14px 18px; }
+
+  .tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .title { font-size: 15px; color: var(--ink); }
+  .meta { color: var(--muted); font-size: 12px; margin-left: auto; }
+
+  /* color stripes */
+  .drive    { border-left: 4px solid var(--drive); }
+  .partition{ border-left: 4px solid var(--partition); }
+  .volume   { border-left: 4px solid var(--volume); }
+  .program  { border-left: 4px solid var(--program); }
+
+  .drive    .tag { color: var(--drive); background: rgba(201,168,106,0.08); }
+  .partition .tag { color: var(--partition); background: rgba(106,163,201,0.08); }
+  .volume   .tag { color: var(--volume); background: rgba(140,201,106,0.08); }
+  .program  .tag { color: var(--program); background: rgba(201,106,140,0.08); }
+
+  /* samples list */
+  .samples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .sample {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--sample);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--ink);
+    background: rgba(106,201,193,0.04);
+  }
+  .sample .stag {
+    font-size: 9px;
+    color: var(--sample);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .desc {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 0 0 6px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 24px;
+    font-size: 11px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .note {
+    margin-top: 32px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .note strong { color: var(--ink); }
+  ul { margin: 8px 0 0 18px; padding: 0; }
+  li { margin: 4px 0; }
+  code { background: rgba(255,255,255,0.05); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Akai S1000 / S1100 — Storage Hierarchy</h1>
+<div class="sub">Drive → Partition → Volume → Programs → Samples</div>
+
+<div class="legend">
+  <span><i class="swatch" style="background:var(--drive)"></i> Drive (.img)</span>
+  <span><i class="swatch" style="background:var(--partition)"></i> Partition (≤ 60 MB)</span>
+  <span><i class="swatch" style="background:var(--volume)"></i> Volume = one project</span>
+  <span><i class="swatch" style="background:var(--program)"></i> Program (.P1)</span>
+  <span><i class="swatch" style="background:var(--sample)"></i> Sample (.S1)</span>
+</div>
+
+<!-- DRIVE -->
+<div class="block drive">
+  <div class="header">
+    <span class="tag">Drive</span>
+    <span class="title">hd5.img</span>
+    <span class="meta">SCSI drive on ZuluSCSI · one .img on SD card</span>
+  </div>
+  <div class="body">
+    <p class="desc">Holds up to four partitions. The whole drive is a single file on the SD card.</p>
+
+    <!-- PARTITION A -->
+    <div class="block partition inner">
+      <div class="header">
+        <span class="tag">Partition A</span>
+        <span class="title">Projects</span>
+        <span class="meta">≤ 60 MB · holds many Volumes</span>
+      </div>
+      <div class="body">
+        <p class="desc">A partition is a category. This one holds finished tracks. Each Volume inside is a separate project.</p>
+
+        <!-- VOLUME 001 -->
+        <div class="block volume inner">
+          <div class="header">
+            <span class="tag">Volume 001</span>
+            <span class="title">90 Jungle Track</span>
+            <span class="meta">= one project · DISK → LOAD VOLUME 001</span>
+          </div>
+          <div class="body">
+            <p class="desc">A Volume contains all the programs and samples for one track. Loading a Volume swaps the whole project into RAM.</p>
+
+            <!-- PROGRAM 1 - DRUMS -->
+            <div class="block program inner">
+              <div class="header">
+                <span class="tag">Program 1</span>
+                <span class="title">Drums</span>
+                <span class="meta">.P1 · drum-style program, key-mapped pads</span>
+              </div>
+              <div class="body">
+                <div class="samples">
+                  <span class="sample"><span class="stag">Sample</span> Kick.S1</span>
+                  <span class="sample"><span class="stag">Sample</span> Snare.S1</span>
+                  <span class="sample"><span class="stag">Sample</span> Hat.S1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PROGRAM 2 - PADS -->
+            <div class="block program inner">
+              <div class="header">
+                <span class="tag">Program 2</span>
+                <span class="title">Pads</span>
+                <span class="meta">.P1 · two samples layered on every key</span>
+              </div>
+              <div class="body">
+                <div class="samples">
+                  <span class="sample"><span class="stag">Sample</span> Pad_Layer_A.S1</span>
+                  <span class="sample"><span class="stag">Sample</span> Pad_Layer_B.S1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PROGRAM 3 - BASS -->
+            <div class="block program inner">
+              <div class="header">
+                <span class="tag">Program 3</span>
+                <span class="title">Bass</span>
+                <span class="meta">.P1 · single-sample, pitched across keyboard</span>
+              </div>
+              <div class="body">
+                <div class="samples">
+                  <span class="sample"><span class="stag">Sample</span> Bass.S1</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- /VOLUME 001 -->
+
+      </div>
+    </div>
+    <!-- /PARTITION A -->
+
+  </div>
+</div>
+<!-- /DRIVE -->
+
+<div class="note">
+  <strong>Key rules</strong>
+  <ul>
+    <li><strong>One project = one Volume</strong>, not a Partition. Switch projects with <code>DISK → LOAD VOLUME → 001 / 002 …</code></li>
+    <li><strong>Partition cap: 60 MB</strong> (Akai filesystem limit). A partition is a category that holds many volumes.</li>
+    <li><strong>S1100 RAM cap: 32 MB</strong> — a project fits inside a 60 MB partition with room to spare.</li>
+    <li>Files: samples = <code>.S1</code>, programs = <code>.P1</code>. Programs reference samples by name <em>within the same Volume</em>.</li>
+    <li>Sample prep before import: <strong>mono · 44.1 kHz · 16-bit · +0.1s trailing silence</strong>.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>
