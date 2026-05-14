@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Akai S1000 / S1100 — Resources</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --panel: #16161a;
+    --ink: #e7e7ea;
+    --muted: #8b8b93;
+    --line: #2a2a31;
+    --accent: #c9a86a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 28px 80px;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin: 0 0 6px;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 40px;
+  }
+  a.card {
+    display: block;
+    padding: 18px 20px;
+    margin: 12px 0;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink);
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  a.card:hover {
+    background: rgba(255,255,255,0.03);
+    border-color: var(--accent);
+  }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .title {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .desc {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  footer {
+    margin-top: 60px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Akai S1000 / S1100</h1>
+<div class="sub">Reference resources · Groovin in G</div>
+
+<a class="card" href="visualizer.html">
+  <div class="tag">Visualizer · HTML</div>
+  <div class="title">Storage Hierarchy</div>
+  <div class="desc">Drive → Partition → Volume → Programs → Samples, with a worked example (90 Jungle Track).</div>
+</a>
+
+<a class="card" href="sample-prep-workflow.md">
+  <div class="tag">Workflow · Markdown</div>
+  <div class="title">S1100 Sample Prep Workflow</div>
+  <div class="desc">Full pipeline: WAV formatting, akaiutil import, building drum programs.</div>
+</a>
+
+<footer>github.com/Groovin-in-G/Documents</footer>
+
+</div>
+</body>
+</html>
