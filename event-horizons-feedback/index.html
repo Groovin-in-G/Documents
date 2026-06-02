@@ -55,14 +55,32 @@
 
   .intro{background:var(--panel); border:1px solid var(--line); border-radius:14px;
     padding:16px 20px; margin:26px 0; font-size:14px; color:var(--muted)}
+  .intro p{margin:0 0 14px}
   .intro b{color:#fff}
-  .legend{display:inline-flex; align-items:center; gap:6px; margin-right:16px}
+  .legend-row{display:flex; gap:22px; flex-wrap:wrap; padding-top:12px; border-top:1px solid var(--line)}
+  .legend{display:inline-flex; align-items:center; gap:7px; font-size:13px}
   .dot{width:9px; height:9px; border-radius:50%}
   .dot.ging{background:var(--accent)} .dot.hs{background:var(--hs)}
 
-  .sesh{font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent-2);
-    margin:40px 0 8px; border-bottom:1px solid var(--line); padding-bottom:8px; font-weight:700}
-  .sesh span{color:var(--muted); letter-spacing:.04em; text-transform:none; font-weight:400; font-style:italic}
+  .sesh{font-size:24px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent-2);
+    margin:46px 0 10px; border-bottom:1px solid var(--line); padding-bottom:10px; font-weight:800;
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .sesh span{color:var(--muted); letter-spacing:.01em; text-transform:none; font-weight:400; font-style:italic; font-size:16px}
+  .sesh-link{font-size:13px; color:var(--accent); text-decoration:none; font-weight:600;
+    letter-spacing:normal; text-transform:none; margin-left:auto}
+  .sesh-link:hover{text-decoration:underline}
+
+  /* ---- Top "watch the streams" index ---- */
+  .streams{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 20px; margin:22px 0}
+  .ix-head{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent-2); margin-bottom:10px}
+  .ix-list{list-style:none; margin:0; padding:0}
+  .ix-list li{display:flex; align-items:baseline; gap:10px; padding:6px 0; font-size:14px; flex-wrap:wrap}
+  .ix-list li + li{border-top:1px solid rgba(255,255,255,.04)}
+  .ix-list b{color:#fff}
+  .ix-sub{color:var(--muted); flex:1 1 auto; font-style:italic; font-size:13px}
+  .ix-list a{color:var(--accent); text-decoration:none; font-weight:600}
+  .ix-list a:hover{text-decoration:underline}
+  .soon{color:var(--muted); font-size:13px; font-style:italic}
 
   /* ---- Track cards ---- */
   .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
@@ -117,10 +135,11 @@
   </header>
 
   <div class="intro">
-    Our track-by-track feedback from the Event Horizons feedback livestreams.
-    <span class="legend"><span class="dot ging"></span><b>Groovin in G</b></span>
-    <span class="legend"><span class="dot hs"></span><b>Human Synthetics</b></span>
-    <br/>Two streams done, one more to come, so this page will keep growing.
+    <p>Our track-by-track feedback from the Event Horizons feedback livestreams. Two streams done, one more to come, so this page will keep growing.</p>
+    <div class="legend-row">
+      <span class="legend"><span class="dot ging"></span><b>Groovin in G</b></span>
+      <span class="legend"><span class="dot hs"></span><b>Human Synthetics</b></span>
+    </div>
   </div>
 
   <div id="content"></div>
@@ -141,7 +160,7 @@ const AUTHORS = { ging:"Groovin in G", hs:"Human Synthetics" };
    ============================================================ */
 const SESSIONS = [
   {
-    n:1, label:"First feedback stream",
+    n:1, label:"First feedback stream", youtube:"https://www.youtube.com/watch?v=yKB5wJ5YX4A",
     tracks:[
       { artist:"Distant Lands", track:"Crystal Visions",
         url:"https://soundcloud.com/user-30192001/crystal-visions", secret:"s-v1uZdnhciA5",
@@ -259,7 +278,7 @@ const SESSIONS = [
   },
 
   {
-    n:2, label:"Monday 1 June",
+    n:2, label:"Monday 1 June", youtube:"https://www.youtube.com/watch?v=ZnvxwT52C5s",
     tracks:[
       { artist:"B-Patrol", track:"Star Aligning", alt:"played as 'Stars'", placeholder:true,
         note:"Sent via WeTransfer — no streaming link yet.",
@@ -519,10 +538,21 @@ function trackCard(t, n){
   </div>`;
 }
 
+function streamsIndex(){
+  const items = SESSIONS.map(s=>{
+    const link = s.youtube
+      ? `<a href="${s.youtube}" target="_blank" rel="noopener">▶ Watch on YouTube</a>`
+      : `<span class="soon">link coming soon</span>`;
+    return `<li><b>Session ${s.n}</b><span class="ix-sub">${esc(s.label)}</span>${link}</li>`;
+  }).join("");
+  return `<div class="streams"><div class="ix-head">Watch the streams</div><ul class="ix-list">${items}</ul></div>`;
+}
+
 function render(){
   const el = document.getElementById("content");
-  el.innerHTML = SESSIONS.map(s=>{
-    const head = `<div class="sesh">Session ${s.n} <span>— ${esc(s.label)}</span></div>`;
+  el.innerHTML = streamsIndex() + SESSIONS.map(s=>{
+    const watch = s.youtube ? `<a class="sesh-link" href="${s.youtube}" target="_blank" rel="noopener">▶ Watch the stream</a>` : "";
+    const head = `<div class="sesh">Session ${s.n} <span>— ${esc(s.label)}</span>${watch}</div>`;
     const cards = s.tracks.map((t,i)=>trackCard(t, i+1)).join("");
     return head + cards;
   }).join("");
