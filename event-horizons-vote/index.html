@@ -108,31 +108,41 @@
   .st-empty{color:var(--muted); font-size:13px}
   @media (max-width:560px){ .st-list{columns:1} }
 
-  /* ---- Track cards ---- */
-  .card{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    padding:14px 14px 16px; margin:14px 0; transition:border-color .15s, box-shadow .15s;
-  }
-  .card.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 30px rgba(90,209,255,.12)}
-  .card.placeholder{border-style:dashed; opacity:.7}
-  .card .row{display:flex; align-items:center; gap:12px; margin-bottom:10px}
-  .num{
-    flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
-    background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted);
-  }
+  /* ---- Live vote-along banner ---- */
+  .livebar{display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:linear-gradient(180deg, rgba(255,93,115,.14), rgba(255,131,81,.08)), var(--panel);
+    border:1px solid var(--hot); border-radius:14px; padding:14px 18px; margin:22px 0;}
+  .livebar .lv-dot{flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:var(--hot);
+    box-shadow:0 0 8px var(--hot); animation:pulse 1.6s ease-in-out infinite}
+  .livebar .lv-text{flex:1 1 auto; min-width:160px; font-size:14px; color:#fff}
+  .livebar a.lv-btn{flex:0 0 auto; background:var(--hot); color:#220308; font-weight:800;
+    padding:10px 18px; border-radius:10px; text-decoration:none}
+  .livebar a.lv-btn:hover{filter:brightness(1.08)}
+
+  /* ---- Accordion track rows ---- */
+  .trk{border:1px solid var(--line); border-radius:12px; margin:8px 0; background:var(--panel);
+    overflow:hidden; transition:border-color .15s, box-shadow .15s}
+  .trk.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 26px rgba(255,131,81,.12)}
+  .trk.placeholder{border-style:dashed; opacity:.75}
+  .trk-head{display:flex; align-items:center; gap:12px; padding:11px 14px; cursor:pointer}
+  .trk-head:hover{background:var(--panel-2)}
+  .num{flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+    background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
+  .trk.selected .num{color:var(--accent); border-color:var(--accent)}
   .meta{flex:1 1 auto; min-width:0}
   .meta .artist{font-weight:700; font-size:15px}
   .meta .track{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .vote{
-    flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
-    background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:8px 14px;
-    font-size:13px; font-weight:600; color:var(--muted); transition:all .15s;
-  }
-  .vote input{accent-color:var(--accent); width:16px; height:16px}
-  .card.selected .vote{color:var(--accent); border-color:var(--accent)}
+  .vote{flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:7px 13px;
+    font-size:13px; font-weight:600; color:var(--muted); transition:all .15s}
+  .vote input{accent-color:var(--accent); width:16px; height:16px; margin:0}
+  .trk.selected .vote{color:var(--accent); border-color:var(--accent)}
   .vote.disabled{opacity:.4; cursor:not-allowed}
+  .trk-chev{flex:0 0 auto; color:var(--muted); transition:transform .18s ease; font-size:13px}
+  .trk-head.open .trk-chev{transform:rotate(90deg); color:var(--accent)}
+  .trk-panel{padding:0 14px 14px}
   .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
-  .placeholder .note{color:var(--muted); font-size:13px; padding:8px 4px}
+  .trk-note{color:var(--muted); font-size:13px; padding:4px 0 6px}
 
   /* ---- Sticky vote bar ---- */
   .bar{
@@ -184,6 +194,8 @@
     <h1 class="title">EVENT HORIZONS</h1>
     <p class="subtitle">Vote for the final tracklist</p>
   </header>
+
+  <div id="livebar" style="display:none"></div>
 
   <div class="howto">
     <b>How it works</b>
@@ -240,6 +252,14 @@ const SHOW_LEADERBOARD = true;
 const LEADERBOARD_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJaecNOv3Mk5r7cVLYx5MFaLt9iaTen_O_BtdtWoeI_M5akkzr2eJzLLUd5JhJksclfHmR213zPorL/pub?gid=1516473135&single=true&output=csv";   // Tally tab
 const TOP_N = 12;
 
+// ---- Live vote-along banner (Patreon live can't be embedded, so we link out) ----
+// During the final livestream, set on:true and paste the Patreon live URL.
+const LIVE = {
+  on: false,
+  url: "",   // Patreon live post / stream URL
+  label: "The final vote-along is live now on Patreon. Watch along, then cast your 3 votes right here."
+};
+
 const MAX_VOTES = 3;
 
 /* ============================================================
@@ -294,37 +314,62 @@ const selected = new Set();
 const tracksEl = document.getElementById("tracks");
 
 function render(){
-  tracksEl.innerHTML = "";
-  TRACKS.forEach((t, i) => {
-    const n = i + 1;
-    const card = document.createElement("div");
-    card.className = "card" + (t.placeholder ? " placeholder" : "");
-    card.dataset.id = t.id;
-
-    const body = t.placeholder
-      ? `<div class="note">⏳ ${t.note}</div>`
-      : `<iframe class="embed" loading="lazy" scrolling="no" frameborder="no" allow="autoplay" src="${embedSrc(t)}"></iframe>`;
-
-    const voteCtl = t.placeholder
+  tracksEl.innerHTML = TRACKS.map((t,i)=>{
+    const ph = t.placeholder;
+    const voteCtl = ph
       ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
       : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`;
-
-    card.innerHTML = `
-      <div class="row">
-        <div class="num">${n}</div>
+    const panel = ph
+      ? `<div class="trk-note">⏳ ${t.note}</div>`
+      : `<iframe class="embed lazy" data-src="${embedSrc(t)}" loading="lazy" scrolling="no" frameborder="no" allow="autoplay"></iframe>`;
+    return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
+      <div class="trk-head">
+        <div class="num">${i+1}</div>
         <div class="meta">
           <div class="artist">${t.artist}</div>
           <div class="track">${t.track}</div>
         </div>
         ${voteCtl}
+        <span class="trk-chev">▸</span>
       </div>
-      ${body}`;
-    tracksEl.appendChild(card);
-  });
+      <div class="trk-panel" hidden>${panel}</div>
+    </div>`;
+  }).join("");
 
   tracksEl.querySelectorAll('input[type=checkbox]:not([disabled])').forEach(cb=>{
     cb.addEventListener("change", onToggle);
   });
+}
+
+// Expand/collapse a row (single-open); ignore clicks on the vote control. Lazy-load the player.
+tracksEl.addEventListener("click", e=>{
+  if (e.target.closest(".vote")) return;       // vote pill handles its own toggle
+  const head = e.target.closest(".trk-head");
+  if (!head) return;
+  const panel = head.nextElementSibling;
+  const isOpen = !panel.hasAttribute("hidden");
+  tracksEl.querySelectorAll(".trk-panel:not([hidden])").forEach(p=>{
+    p.setAttribute("hidden","");
+    p.previousElementSibling.classList.remove("open");
+  });
+  if (!isOpen){
+    panel.removeAttribute("hidden");
+    head.classList.add("open");
+    const f = panel.querySelector("iframe.lazy");
+    if (f && !f.src) f.src = f.dataset.src;
+  }
+});
+
+function renderLiveBanner(){
+  const el = document.getElementById("livebar");
+  if (!el) return;
+  if (LIVE.on){
+    const btn = LIVE.url ? `<a class="lv-btn" href="${LIVE.url}" target="_blank" rel="noopener">Watch on Patreon</a>` : "";
+    el.innerHTML = `<span class="lv-dot"></span><span class="lv-text">${LIVE.label}</span>${btn}`;
+    el.style.display = "flex";
+  } else {
+    el.style.display = "none";
+  }
 }
 
 function onToggle(e){
@@ -340,8 +385,8 @@ function onToggle(e){
 
 function syncUI(){
   document.getElementById("count").textContent = selected.size;
-  // highlight selected cards
-  tracksEl.querySelectorAll(".card").forEach(c=>{
+  // highlight selected rows
+  tracksEl.querySelectorAll(".trk").forEach(c=>{
     c.classList.toggle("selected", selected.has(c.dataset.id));
   });
   // lock remaining checkboxes when 3 reached
@@ -486,6 +531,7 @@ function unlock(){
   document.getElementById("page").style.display = "block";
   document.getElementById("bar").style.display = "block";
   render(); syncUI();
+  renderLiveBanner();
   loadStandings();
   if(SHOW_LEADERBOARD && LEADERBOARD_CSV) setInterval(loadStandings, 30000);
 }
