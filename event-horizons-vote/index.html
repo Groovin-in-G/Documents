@@ -149,6 +149,12 @@
     border:1px solid var(--line); position:relative; cursor:pointer; overflow:hidden}
   .mini-fill{position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
   .mini-time{flex:0 0 auto; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:32px; text-align:right}
+  .trk-exp{flex:0 0 auto; background:none; border:0; color:var(--muted); cursor:pointer; font-size:13px;
+    padding:4px 6px; transition:transform .18s ease}
+  .trk-exp:hover{color:var(--accent)}
+  .trk-exp.open{transform:rotate(90deg); color:var(--accent)}
+  .trk-panel{padding:0 14px 14px}
+  .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
   @media (max-width:620px){
     .trk-head{flex-wrap:wrap}
     .num{order:0} .meta{order:1; flex:1 1 auto} .vote{order:2}
@@ -346,7 +352,9 @@ function render(){
         </div>
         ${mini}
         ${voteCtl}
+        ${ph ? "" : `<button class="trk-exp" data-id="${t.id}" aria-label="Open full player">▸</button>`}
       </div>
+      <div class="trk-panel" hidden></div>
     </div>`;
   }).join("");
 
@@ -355,51 +363,62 @@ function render(){
   });
 }
 
-/* ---- Inline mini-players (SoundCloud Widget API) ---- */
+/* ---- Inline mini-players + expandable full player (SoundCloud Widget API) ---- */
 (function(){ const s=document.createElement("script"); s.src="https://w.soundcloud.com/player/api.js"; document.head.appendChild(s); })();
 const scHost = document.createElement("div");
 scHost.style.cssText = "position:absolute; left:-9999px; top:0; width:0; height:0; overflow:hidden";
 document.body.appendChild(scHost);
-const widgets = {};
-let currentPlaying = null;
 
+const players = {};   // key -> SC.Widget ; key = id (mini), id+"#full" (expanded)
+
+function scURL(t){ const u = t.secret ? t.url + "?secret_token=" + t.secret : t.url;
+  return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(u); }
 function fmt(ms){ const s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
 function setIcon(id,playing){ const b=document.querySelector(`.mini-play[data-id="${id}"]`); if(b) b.textContent = playing?"❚❚":"▶"; }
 
-function ensureWidget(id, cb){
-  if (typeof SC === "undefined") return;        // api still loading; user can click again
-  if (widgets[id]) { cb && cb(widgets[id]); return; }
+// Global one-at-a-time: pause every player except the one that just started.
+function pauseOthers(exceptKey){
+  Object.keys(players).forEach(k=>{
+    if(k!==exceptKey){ players[k].pause(); if(!k.includes("#")) setIcon(k,false); }
+  });
+}
+
+// Hidden widget powering the inline scrubber.
+function ensureMini(id, cb){
+  if (typeof SC === "undefined") return;
+  if (players[id]) { cb && cb(players[id]); return; }
   const t = TRACKS.find(x=>x.id===id);
-  const u = t.secret ? t.url + "?secret_token=" + t.secret : t.url;
   const iframe = document.createElement("iframe");
   iframe.allow = "autoplay";
-  iframe.src = "https://w.soundcloud.com/player/?url=" + encodeURIComponent(u) +
-    "&visual=false&sharing=false&download=false&buying=false&show_comments=false";
+  iframe.src = scURL(t) + "&visual=false&sharing=false&download=false&buying=false&show_comments=false";
   scHost.appendChild(iframe);
-  const w = SC.Widget(iframe);
-  widgets[id] = w;
+  const w = SC.Widget(iframe); players[id] = w;
   w.bind(SC.Widget.Events.READY, ()=>{
     const fill = document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
     const time = document.querySelector(`.mini[data-id="${id}"] .mini-time`);
-    w.bind(SC.Widget.Events.PLAY_PROGRESS, e=>{
-      if(fill) fill.style.width = (e.relativePosition*100).toFixed(2)+"%";
-      if(time) time.textContent = fmt(e.currentPosition);
-    });
-    w.bind(SC.Widget.Events.FINISH, ()=>{ setIcon(id,false); if(fill) fill.style.width="0%"; if(currentPlaying===id) currentPlaying=null; });
+    w.bind(SC.Widget.Events.PLAY_PROGRESS, e=>{ if(fill) fill.style.width=(e.relativePosition*100).toFixed(2)+"%"; if(time) time.textContent=fmt(e.currentPosition); });
+    w.bind(SC.Widget.Events.PLAY, ()=>{ pauseOthers(id); setIcon(id,true); });
+    w.bind(SC.Widget.Events.PAUSE, ()=> setIcon(id,false));
+    w.bind(SC.Widget.Events.FINISH, ()=>{ setIcon(id,false); if(fill) fill.style.width="0%"; });
     cb && cb(w);
   });
 }
 
+// Full SoundCloud player (waveform + link) shown when a row is expanded.
+function ensureFull(id, panel){
+  const key = id+"#full";
+  if (players[key] || typeof SC === "undefined") return;
+  const t = TRACKS.find(x=>x.id===id);
+  const iframe = document.createElement("iframe");
+  iframe.className="embed"; iframe.allow="autoplay"; iframe.scrolling="no"; iframe.setAttribute("frameborder","no");
+  iframe.src = scURL(t) + "&visual=false&show_user=true&show_comments=false";
+  panel.appendChild(iframe);
+  const w = SC.Widget(iframe); players[key] = w;
+  w.bind(SC.Widget.Events.READY, ()=>{ w.bind(SC.Widget.Events.PLAY, ()=> pauseOthers(key)); });
+}
+
 function playPause(id){
-  if (currentPlaying && currentPlaying !== id && widgets[currentPlaying]){
-    widgets[currentPlaying].pause(); setIcon(currentPlaying,false);
-  }
-  ensureWidget(id, w=>{
-    w.isPaused(p=>{
-      if(p){ w.play(); setIcon(id,true); currentPlaying=id; }
-      else { w.pause(); setIcon(id,false); if(currentPlaying===id) currentPlaying=null; }
-    });
-  });
+  ensureMini(id, w=>{ w.isPaused(p=>{ if(p){ pauseOthers(id); w.play(); } else { w.pause(); } }); });
 }
 
 tracksEl.addEventListener("click", e=>{
@@ -409,12 +428,24 @@ tracksEl.addEventListener("click", e=>{
   if(bar){
     const id=bar.dataset.id, r=bar.getBoundingClientRect();
     const frac=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
-    ensureWidget(id, w=>{
-      if(currentPlaying && currentPlaying!==id && widgets[currentPlaying]){ widgets[currentPlaying].pause(); setIcon(currentPlaying,false); }
-      w.getDuration(d=>{ w.seekTo(d*frac); w.play(); setIcon(id,true); currentPlaying=id; });
-    });
+    ensureMini(id, w=>{ pauseOthers(id); w.getDuration(d=>{ w.seekTo(d*frac); w.play(); }); });
+    return;
+  }
+  const exp = e.target.closest(".trk-exp");
+  if(exp){
+    const id=exp.dataset.id, panel=exp.closest(".trk").querySelector(".trk-panel");
+    if(panel.hasAttribute("hidden")){ panel.removeAttribute("hidden"); exp.classList.add("open"); ensureFull(id, panel); }
+    else { panel.setAttribute("hidden",""); exp.classList.remove("open"); }
+    return;
   }
 });
+
+// Preload inline players (staggered, after unlock) so the first tap plays fast.
+function preloadMinis(){
+  if (typeof SC === "undefined"){ setTimeout(preloadMinis, 400); return; }
+  const list = TRACKS.filter(t=>!t.placeholder); let i=0;
+  (function next(){ if(i>=list.length) return; ensureMini(list[i].id); i++; setTimeout(next, 120); })();
+}
 
 function renderLiveBanner(){
   const el = document.getElementById("livebar");
@@ -588,6 +619,7 @@ function unlock(){
   document.getElementById("bar").style.display = "block";
   render(); syncUI();
   renderLiveBanner();
+  preloadMinis();
   loadStandings();
   if(SHOW_LEADERBOARD && LEADERBOARD_CSV) setInterval(loadStandings, 30000);
 }
