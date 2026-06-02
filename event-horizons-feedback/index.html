@@ -82,6 +82,29 @@
   .ix-list a:hover{text-decoration:underline}
   .soon{color:var(--muted); font-size:13px; font-style:italic}
 
+  /* ---- Embedded session player ---- */
+  .ytwrap{position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden;
+    background:#000; border:1px solid var(--line); margin-bottom:16px}
+  .ytwrap > div, .ytwrap iframe{position:absolute; inset:0; width:100%!important; height:100%!important; border:0}
+
+  /* ---- Accordion track rows ---- */
+  .trklist{margin-bottom:8px}
+  .trk{border:1px solid var(--line); border-radius:12px; margin:8px 0; background:var(--panel); overflow:hidden}
+  .trk-head{width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px;
+    background:none; border:0; color:var(--text); cursor:pointer; text-align:left; font:inherit}
+  .trk-head:hover{background:var(--panel-2)}
+  .trk-meta{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .trk-meta b{font-size:15px}
+  .trk-meta span{color:var(--muted); font-size:13px}
+  .trk-jump{flex:0 0 auto; font-size:11px; color:var(--accent); border:1px solid var(--accent);
+    border-radius:999px; padding:1px 8px; white-space:nowrap}
+  .trk-chev{flex:0 0 auto; color:var(--muted); transition:transform .18s ease; font-size:13px}
+  .trk-head.open .trk-chev{transform:rotate(90deg); color:var(--accent)}
+  .trk-head.open{border-bottom:1px solid var(--line)}
+  .trk-panel{padding:14px}
+  .trk-panel .embed{margin-bottom:12px}
+  .trk-panel .reviews{margin-top:0}
+
   /* ---- Track cards ---- */
   .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
     padding:14px 16px 18px; margin:14px 0;}
@@ -538,25 +561,85 @@ function trackCard(t, n){
   </div>`;
 }
 
-function streamsIndex(){
-  const items = SESSIONS.map(s=>{
-    const link = s.youtube
-      ? `<a href="${s.youtube}" target="_blank" rel="noopener">▶ Watch on YouTube</a>`
-      : `<span class="soon">link coming soon</span>`;
-    return `<li><b>Session ${s.n}</b><span class="ix-sub">${esc(s.label)}</span>${link}</li>`;
-  }).join("");
-  return `<div class="streams"><div class="ix-head">Watch the streams</div><ul class="ix-list">${items}</ul></div>`;
+/* ---- YouTube IFrame API: one controllable player per session ---- */
+let ytApiReady = false;
+const ytPlayers = {};
+window.onYouTubeIframeAPIReady = function(){ ytApiReady = true; buildPlayers(); };
+(function loadYT(){ const s=document.createElement("script"); s.src="https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
+
+function videoId(url){ const m = String(url).match(/[?&]v=([^&]+)/); return m ? m[1] : ""; }
+
+function buildPlayers(){
+  if(!ytApiReady || !window.YT || !YT.Player) return;
+  SESSIONS.forEach(s=>{
+    if(!s.youtube) return;
+    const id = "ytplayer-" + s.n;
+    if(ytPlayers[s.n] || !document.getElementById(id)) return;
+    ytPlayers[s.n] = new YT.Player(id, { videoId: videoId(s.youtube), playerVars:{ rel:0, modestbranding:1 } });
+  });
+}
+
+function jumpTo(session, seconds){
+  const p = ytPlayers[session];
+  if(p && typeof p.seekTo === "function"){
+    p.seekTo(seconds, true);
+    p.playVideo();
+    const w = document.getElementById("ytplayer-"+session);
+    if(w) w.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+}
+
+function trackRow(t, s, i){
+  const hasStart = (typeof t.ytStart === "number");
+  const jumpHint = hasStart ? `<span class="trk-jump">▶ jumps video</span>` : "";
+  let media = "";
+  if(!t.placeholder){
+    media = `<iframe class="embed lazy" data-src="${embedSrc(t)}" loading="lazy" scrolling="no" frameborder="no" allow="autoplay"></iframe>`;
+  } else if(t.link){
+    media = `<div class="noembed">⏳ ${esc(t.note||"")} <a href="${t.link}" target="_blank" rel="noopener">Open link →</a></div>`;
+  } else {
+    media = `<div class="noembed">⏳ ${esc(t.note||"No stream link yet.")}</div>`;
+  }
+  const reviews = `<div class="reviews">${t.reviews.map(reviewBlock).join("")}</div>`;
+  return `<div class="trk">
+    <button class="trk-head" data-session="${s.n}"${hasStart?` data-start="${t.ytStart}"`:""}>
+      <span class="num">${i+1}</span>
+      <span class="trk-meta"><b>${esc(t.artist)}</b> <span>${esc(t.track)}</span></span>
+      ${jumpHint}
+      <span class="trk-chev">▸</span>
+    </button>
+    <div class="trk-panel" hidden>${media}${reviews}</div>
+  </div>`;
 }
 
 function render(){
   const el = document.getElementById("content");
-  el.innerHTML = streamsIndex() + SESSIONS.map(s=>{
-    const watch = s.youtube ? `<a class="sesh-link" href="${s.youtube}" target="_blank" rel="noopener">▶ Watch the stream</a>` : "";
+  el.innerHTML = SESSIONS.map(s=>{
+    const watch = s.youtube ? `<a class="sesh-link" href="${s.youtube}" target="_blank" rel="noopener">▶ Open on YouTube</a>` : "";
     const head = `<div class="sesh">Session ${s.n} <span>— ${esc(s.label)}</span>${watch}</div>`;
-    const cards = s.tracks.map((t,i)=>trackCard(t, i+1)).join("");
-    return head + cards;
+    const player = s.youtube ? `<div class="ytwrap"><div id="ytplayer-${s.n}"></div></div>` : "";
+    const rows = s.tracks.map((t,i)=>trackRow(t, s, i)).join("");
+    return head + player + `<div class="trklist">${rows}</div>`;
   }).join("");
+  buildPlayers();
 }
+
+/* accordion + jump (event delegation) */
+document.getElementById("content").addEventListener("click", function(e){
+  const head = e.target.closest(".trk-head");
+  if(!head) return;
+  const panel = head.nextElementSibling;
+  if(panel.hasAttribute("hidden")){
+    panel.removeAttribute("hidden");
+    head.classList.add("open");
+    const f = panel.querySelector("iframe.lazy");
+    if(f && !f.src){ f.src = f.dataset.src; }
+    if(head.dataset.start !== undefined) jumpTo(parseInt(head.dataset.session,10), parseInt(head.dataset.start,10));
+  } else {
+    panel.setAttribute("hidden","");
+    head.classList.remove("open");
+  }
+});
 
 /* ============================================================
    PASSWORD GATE
