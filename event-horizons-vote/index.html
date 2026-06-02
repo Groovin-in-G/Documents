@@ -124,12 +124,11 @@
     overflow:hidden; transition:border-color .15s, box-shadow .15s}
   .trk.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 26px rgba(255,131,81,.12)}
   .trk.placeholder{border-style:dashed; opacity:.75}
-  .trk-head{display:flex; align-items:center; gap:12px; padding:11px 14px; cursor:pointer}
-  .trk-head:hover{background:var(--panel-2)}
+  .trk-head{display:flex; align-items:center; gap:12px; padding:11px 14px}
   .num{flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
     background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
   .trk.selected .num{color:var(--accent); border-color:var(--accent)}
-  .meta{flex:1 1 auto; min-width:0}
+  .meta{flex:0 1 auto; min-width:0}
   .meta .artist{font-weight:700; font-size:15px}
   .meta .track{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .vote{flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
@@ -138,11 +137,23 @@
   .vote input{accent-color:var(--accent); width:16px; height:16px; margin:0}
   .trk.selected .vote{color:var(--accent); border-color:var(--accent)}
   .vote.disabled{opacity:.4; cursor:not-allowed}
-  .trk-chev{flex:0 0 auto; color:var(--muted); transition:transform .18s ease; font-size:13px}
-  .trk-head.open .trk-chev{transform:rotate(90deg); color:var(--accent)}
-  .trk-panel{padding:0 14px 14px}
-  .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
-  .trk-note{color:var(--muted); font-size:13px; padding:4px 0 6px}
+  .trk-note{flex:1 1 auto; color:var(--muted); font-size:13px}
+
+  /* ---- Inline mini-player ---- */
+  .mini{flex:1 1 auto; min-width:110px; display:flex; align-items:center; gap:9px; margin:0 4px}
+  .mini-play{flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--accent); cursor:pointer; display:grid; place-items:center;
+    font-size:11px; line-height:1; padding:0}
+  .mini-play:hover{border-color:var(--accent)}
+  .mini-bar{flex:1 1 auto; height:8px; border-radius:4px; background:var(--panel-2);
+    border:1px solid var(--line); position:relative; cursor:pointer; overflow:hidden}
+  .mini-fill{position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  .mini-time{flex:0 0 auto; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:32px; text-align:right}
+  @media (max-width:620px){
+    .trk-head{flex-wrap:wrap}
+    .num{order:0} .meta{order:1; flex:1 1 auto} .vote{order:2}
+    .mini{order:3; flex-basis:100%; width:100%; margin:8px 0 0}
+  }
 
   /* ---- Sticky vote bar ---- */
   .bar{
@@ -319,9 +330,13 @@ function render(){
     const voteCtl = ph
       ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
       : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`;
-    const panel = ph
+    const mini = ph
       ? `<div class="trk-note">⏳ ${t.note}</div>`
-      : `<iframe class="embed lazy" data-src="${embedSrc(t)}" loading="lazy" scrolling="no" frameborder="no" allow="autoplay"></iframe>`;
+      : `<div class="mini" data-id="${t.id}">
+           <button class="mini-play" data-id="${t.id}" aria-label="Play / pause">▶</button>
+           <div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>
+           <span class="mini-time">0:00</span>
+         </div>`;
     return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
       <div class="trk-head">
         <div class="num">${i+1}</div>
@@ -329,10 +344,9 @@ function render(){
           <div class="artist">${t.artist}</div>
           <div class="track">${t.track}</div>
         </div>
+        ${mini}
         ${voteCtl}
-        <span class="trk-chev">▸</span>
       </div>
-      <div class="trk-panel" hidden>${panel}</div>
     </div>`;
   }).join("");
 
@@ -341,22 +355,64 @@ function render(){
   });
 }
 
-// Expand/collapse a row (single-open); ignore clicks on the vote control. Lazy-load the player.
-tracksEl.addEventListener("click", e=>{
-  if (e.target.closest(".vote")) return;       // vote pill handles its own toggle
-  const head = e.target.closest(".trk-head");
-  if (!head) return;
-  const panel = head.nextElementSibling;
-  const isOpen = !panel.hasAttribute("hidden");
-  tracksEl.querySelectorAll(".trk-panel:not([hidden])").forEach(p=>{
-    p.setAttribute("hidden","");
-    p.previousElementSibling.classList.remove("open");
+/* ---- Inline mini-players (SoundCloud Widget API) ---- */
+(function(){ const s=document.createElement("script"); s.src="https://w.soundcloud.com/player/api.js"; document.head.appendChild(s); })();
+const scHost = document.createElement("div");
+scHost.style.cssText = "position:absolute; left:-9999px; top:0; width:0; height:0; overflow:hidden";
+document.body.appendChild(scHost);
+const widgets = {};
+let currentPlaying = null;
+
+function fmt(ms){ const s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+function setIcon(id,playing){ const b=document.querySelector(`.mini-play[data-id="${id}"]`); if(b) b.textContent = playing?"❚❚":"▶"; }
+
+function ensureWidget(id, cb){
+  if (typeof SC === "undefined") return;        // api still loading; user can click again
+  if (widgets[id]) { cb && cb(widgets[id]); return; }
+  const t = TRACKS.find(x=>x.id===id);
+  const u = t.secret ? t.url + "?secret_token=" + t.secret : t.url;
+  const iframe = document.createElement("iframe");
+  iframe.allow = "autoplay";
+  iframe.src = "https://w.soundcloud.com/player/?url=" + encodeURIComponent(u) +
+    "&visual=false&sharing=false&download=false&buying=false&show_comments=false";
+  scHost.appendChild(iframe);
+  const w = SC.Widget(iframe);
+  widgets[id] = w;
+  w.bind(SC.Widget.Events.READY, ()=>{
+    const fill = document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
+    const time = document.querySelector(`.mini[data-id="${id}"] .mini-time`);
+    w.bind(SC.Widget.Events.PLAY_PROGRESS, e=>{
+      if(fill) fill.style.width = (e.relativePosition*100).toFixed(2)+"%";
+      if(time) time.textContent = fmt(e.currentPosition);
+    });
+    w.bind(SC.Widget.Events.FINISH, ()=>{ setIcon(id,false); if(fill) fill.style.width="0%"; if(currentPlaying===id) currentPlaying=null; });
+    cb && cb(w);
   });
-  if (!isOpen){
-    panel.removeAttribute("hidden");
-    head.classList.add("open");
-    const f = panel.querySelector("iframe.lazy");
-    if (f && !f.src) f.src = f.dataset.src;
+}
+
+function playPause(id){
+  if (currentPlaying && currentPlaying !== id && widgets[currentPlaying]){
+    widgets[currentPlaying].pause(); setIcon(currentPlaying,false);
+  }
+  ensureWidget(id, w=>{
+    w.isPaused(p=>{
+      if(p){ w.play(); setIcon(id,true); currentPlaying=id; }
+      else { w.pause(); setIcon(id,false); if(currentPlaying===id) currentPlaying=null; }
+    });
+  });
+}
+
+tracksEl.addEventListener("click", e=>{
+  const pb = e.target.closest(".mini-play");
+  if(pb){ playPause(pb.dataset.id); return; }
+  const bar = e.target.closest(".mini-bar");
+  if(bar){
+    const id=bar.dataset.id, r=bar.getBoundingClientRect();
+    const frac=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
+    ensureWidget(id, w=>{
+      if(currentPlaying && currentPlaying!==id && widgets[currentPlaying]){ widgets[currentPlaying].pause(); setIcon(currentPlaying,false); }
+      w.getDuration(d=>{ w.seekTo(d*frac); w.play(); setIcon(id,true); currentPlaying=id; });
+    });
   }
 });
 
