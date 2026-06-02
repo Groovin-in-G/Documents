@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Blue Dawn Records — Event Horizons — Vote</title>
+<style>
+  :root{
+    --bg:#070d18; --panel:#0e1626; --panel-2:#13203360;
+    --line:#23344f; --text:#eaf0fb; --muted:#93a3c0;
+    --accent:#ff8351; --accent-2:#f0b15a; --hot:#ff5d73;
+    --ok:#5fd3a6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 50% -8%, rgba(90,150,230,.18), transparent 60%),
+      radial-gradient(1300px 700px at 50% 118%, rgba(255,150,80,.16), transparent 55%),
+      radial-gradient(900px 500px at 90% 8%, rgba(240,177,90,.10), transparent 55%),
+      linear-gradient(180deg,#0a1322 0%, #070d18 45%, #0b1322 100%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  a{color:var(--accent)}
+
+  /* ---- Password gate ---- */
+  #gate{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(3,4,8,.97);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  #gate .box{
+    width:100%; max-width:420px; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:32px;
+    text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.6);
+  }
+  #gate .glogo{width:108px; height:108px; border-radius:50%; margin:0 auto 18px; display:block;
+    box-shadow:0 0 0 1px var(--line), 0 12px 40px rgba(255,131,81,.18)}
+  #gate h1{font-size:13px; letter-spacing:.30em; text-transform:uppercase; margin:0 0 4px; color:var(--accent-2)}
+  #gate .gsub{font-size:22px; font-weight:800; letter-spacing:.04em; margin:0 0 6px}
+  #gate p{color:var(--muted); font-size:14px; margin:0 0 22px}
+  #gate input{
+    width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font-size:15px; text-align:center;
+  }
+  #gate button{margin-top:14px}
+  #gateError{color:var(--hot); font-size:13px; min-height:18px; margin-top:10px}
+
+  /* ---- Layout ---- */
+  .wrap{max-width:820px; margin:0 auto; padding:40px 20px 160px}
+  header.hero{text-align:center; margin-bottom:8px}
+  .hero .logo{width:160px; height:160px; border-radius:50%; display:block; margin:0 auto 22px;
+    box-shadow:0 0 0 1px var(--line), 0 18px 60px rgba(255,131,81,.20), 0 0 90px rgba(90,150,230,.12)}
+  .kicker{color:var(--accent-2); letter-spacing:.34em; text-transform:uppercase; font-size:11px}
+  .title{
+    font-size:clamp(30px,6vw,52px); font-weight:800; letter-spacing:.02em; margin:8px 0 2px;
+    background:linear-gradient(180deg,#fff, #ffd9a8 58%, #ff8a5c);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 2px 34px rgba(255,131,81,.22);
+  }
+  .subtitle{font-style:italic; color:#cdd7ee; font-size:clamp(15px,3vw,20px); margin:0}
+
+  .howto{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px 20px; margin:26px 0; font-size:14px;
+  }
+  .howto b{color:#fff}
+  .howto ul{margin:10px 0 0; padding-left:18px; color:var(--muted)}
+  .howto li{margin:4px 0}
+
+  /* ---- Live standings ---- */
+  .standings{
+    background:linear-gradient(180deg, rgba(240,177,90,.06), rgba(255,131,81,.04)), var(--panel);
+    border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin:26px 0;
+  }
+  .st-head{
+    display:flex; align-items:center; gap:10px; font-size:12px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent-2); margin-bottom:12px;
+  }
+  .st-live{
+    font-size:10px; letter-spacing:.12em; color:var(--accent); border:1px solid var(--accent);
+    border-radius:999px; padding:1px 7px; display:inline-flex; align-items:center; gap:5px;
+  }
+  .st-live::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 6px var(--accent); animation:pulse 1.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .st-list{list-style:none; margin:0; padding:0; columns:2; column-gap:22px}
+  .st-item{
+    display:flex; align-items:baseline; gap:8px; padding:4px 0; font-size:12.5px;
+    break-inside:avoid; border-bottom:1px solid rgba(255,255,255,.04);
+  }
+  .st-rank{flex:0 0 auto; width:18px; text-align:right; color:var(--muted); font-weight:700}
+  .st-rank.top{color:var(--accent-2)}
+  .st-name{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .st-name b{color:var(--text); font-weight:600}
+  .st-name span{color:var(--muted)}
+  .st-votes{flex:0 0 auto; color:var(--accent); font-weight:700; font-variant-numeric:tabular-nums}
+  .st-empty{color:var(--muted); font-size:13px}
+  @media (max-width:560px){ .st-list{columns:1} }
+
+  /* ---- Track cards ---- */
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px 14px 16px; margin:14px 0; transition:border-color .15s, box-shadow .15s;
+  }
+  .card.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 30px rgba(90,209,255,.12)}
+  .card.placeholder{border-style:dashed; opacity:.7}
+  .card .row{display:flex; align-items:center; gap:12px; margin-bottom:10px}
+  .num{
+    flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+    background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted);
+  }
+  .meta{flex:1 1 auto; min-width:0}
+  .meta .artist{font-weight:700; font-size:15px}
+  .meta .track{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .vote{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:8px 14px;
+    font-size:13px; font-weight:600; color:var(--muted); transition:all .15s;
+  }
+  .vote input{accent-color:var(--accent); width:16px; height:16px}
+  .card.selected .vote{color:var(--accent); border-color:var(--accent)}
+  .vote.disabled{opacity:.4; cursor:not-allowed}
+  .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
+  .placeholder .note{color:var(--muted); font-size:13px; padding:8px 4px}
+
+  /* ---- Sticky vote bar ---- */
+  .bar{
+    position:fixed; left:0; right:0; bottom:0; z-index:40;
+    background:rgba(8,10,16,.92); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line); padding:14px 20px;
+  }
+  .bar .inner{max-width:820px; margin:0 auto; display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+  .counter{font-weight:700; font-size:15px}
+  .counter .n{color:var(--accent)}
+  .fields{display:flex; gap:8px; flex:1 1 auto; min-width:220px}
+  .fields input{
+    flex:1 1 0; min-width:0; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font-size:14px;
+  }
+  button{
+    background:linear-gradient(180deg,var(--accent),#2aa9e0); color:#04121a; border:0;
+    font-weight:800; letter-spacing:.02em; padding:12px 22px; border-radius:10px; cursor:pointer;
+    font-size:15px; transition:filter .15s, opacity .15s;
+  }
+  button:hover{filter:brightness(1.08)}
+  button:disabled{opacity:.45; cursor:not-allowed; filter:grayscale(.3)}
+  .barmsg{flex:1 1 100%; font-size:13px; color:var(--hot); min-height:0}
+  .barmsg.ok{color:var(--ok)}
+
+  .footnote{text-align:center; color:var(--muted); font-size:12px; margin-top:30px}
+</style>
+</head>
+<body>
+
+<!-- ====== PASSWORD GATE ====== -->
+<div id="gate">
+  <div class="box">
+    <img class="glogo" src="assets/blue-dawn-logo.png" alt="Blue Dawn Records" />
+    <h1>Blue Dawn Records</h1>
+    <div class="gsub">Event Horizons</div>
+    <p>Patron voting is password protected.<br/>Enter the password from the Patreon post.</p>
+    <input id="gateInput" type="password" placeholder="Password" autocomplete="off" />
+    <div id="gateError"></div>
+    <button id="gateBtn">Enter</button>
+  </div>
+</div>
+
+<!-- ====== PAGE ====== -->
+<div class="wrap" id="page" style="display:none">
+  <header class="hero">
+    <img class="logo" src="assets/blue-dawn-logo.png" alt="Blue Dawn Records" />
+    <div class="kicker">Blue Dawn Records</div>
+    <h1 class="title">EVENT HORIZONS</h1>
+    <p class="subtitle">Vote for the final tracklist</p>
+  </header>
+
+  <div class="howto">
+    <b>How it works</b>
+    <ul>
+      <li>Have a listen through, then pick your <b>3 favourite tracks</b>.</li>
+      <li>Add your name and Patreon handle so we can check votes. <b>One vote per patron, please.</b></li>
+      <li>Voting is open and self-voting is allowed.</li>
+      <li>Voting closes <b id="deadline">30 June 2026</b>. The top 12 make the compilation.</li>
+    </ul>
+  </div>
+
+  <div class="standings" id="standings" style="display:none">
+    <div class="st-head">Current Top 12 <span class="st-live">live</span></div>
+    <ol class="st-list" id="stList"></ol>
+  </div>
+
+  <div id="tracks"></div>
+
+  <p class="footnote">Tracks are unreleased — please don't share this page or the password outside the patron group.</p>
+</div>
+
+<!-- ====== STICKY VOTE BAR ====== -->
+<div class="bar" id="bar" style="display:none">
+  <div class="inner">
+    <div class="counter"><span class="n" id="count">0</span> / 3 selected</div>
+    <div class="fields">
+      <input id="voterName" type="text" placeholder="Your name" autocomplete="name" />
+      <input id="voterHandle" type="text" placeholder="Patreon handle / email" />
+    </div>
+    <button id="submitBtn" disabled>Submit vote</button>
+    <div class="barmsg" id="barmsg"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+// TODO: change this before launch, and share it only in the Patreon post.
+const PAGE_PASSWORD = "firstlight";
+
+// ---- Google Form backend ----
+// Fill these from the form's pre-filled link. Leave blank to run in preview mode.
+const FORM_ACTION  = "https://docs.google.com/forms/d/e/1FAIpQLScIt2Nl7T63ZNGU5fdZvSfTh2V9JnuZylUaUKk6EtWbMSgrMQ/formResponse";
+const ENTRY_NAME   = "entry.1737730860";   // Name field
+const ENTRY_HANDLE = "entry.1861626853";   // Patreon handle field
+const ENTRY_TRACKS = "entry.1807324425";   // "your 3 picks" checkbox field
+const BACKEND_READY = FORM_ACTION && ENTRY_NAME && ENTRY_HANDLE && ENTRY_TRACKS;
+
+// ---- Live "current top 12" leaderboard ----
+// Set SHOW_LEADERBOARD to true and paste the Tally tab's "Publish to web" CSV link.
+// Leave the URL blank (or SHOW_LEADERBOARD=false) to hide the panel.
+const SHOW_LEADERBOARD = true;
+const LEADERBOARD_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJaecNOv3Mk5r7cVLYx5MFaLt9iaTen_O_BtdtWoeI_M5akkzr2eJzLLUd5JhJksclfHmR213zPorL/pub?gid=1516473135&single=true&output=csv";   // Tally tab
+const TOP_N = 12;
+
+const MAX_VOTES = 3;
+
+/* ============================================================
+   TRACK DATA  (WIP roster, pulled 2026-06-02)
+   - `secret` is the SoundCloud /s- token for private uploads.
+   - `placeholder:true` = no embeddable SoundCloud link yet.
+   ============================================================ */
+const TRACKS = [
+  { id:"anonym-shuffle",      artist:"Anonym",               track:"Shuffle & Cut (WIP)",     url:"https://soundcloud.com/anonymsound/ambient-jungle-jam-2025-12-30-bounce-1" },
+  { id:"distantlands-crystal",artist:"Distant Lands",        track:"Crystal Visions",         url:"https://soundcloud.com/user-30192001/crystal-visions", secret:"s-v1uZdnhciA5" },
+  { id:"rjmacready-algebrast", artist:"RJ Macready",         track:"Algebrast (WIP)",         url:"https://soundcloud.com/jimmy-walsh-1/tune-ideas-drums-1", secret:"s-Q36GynBBNGD" },
+  { id:"fwm-polaris",         artist:"Future World Machines",track:"Polaris",                 url:"https://soundcloud.com/patrickgroll/polaris-2026-04-21-1307" },
+  { id:"fatalstrategy-feeling",artist:"Fatal Strategy",      track:"With Feeling",            url:"https://soundcloud.com/fatal-strategy/with-feeling" },
+  { id:"drumatic-reckless",   artist:"Drumatic",             track:"Reckless",                url:"https://soundcloud.com/charlie-clarkson-berry/reckless" },
+  { id:"monsieurbruit-footwork",artist:"Monsieur Bruit",     track:"Footwork Lullaby",        url:"https://soundcloud.com/vinu-vinu-music/footwork-lullaby", secret:"s-EDiF6MpbF8Q" },
+  { id:"tsuki-jungle",        artist:"Tsuki & Gureggu",      track:"Into The Jungle",         url:"https://soundcloud.com/j-b-295179176/tsuki-gureggu-into-the-jungle" },
+  { id:"kosu-letgo",          artist:"KOSU",                 track:"Wish I Never Let Go",     url:"https://soundcloud.com/itskosu/wish-i-never-let-go", secret:"s-68C1rDLJbog" },
+  { id:"amalgam-noblewoods",  artist:"Amalgam",              track:"Noble Woods",             url:"https://soundcloud.com/amalgam_sound/noblewoods" },
+  { id:"indo-believe",        artist:"Indo (DougieC)",       track:"Believe In Getting By",   url:"https://soundcloud.com/indo-dougiec/believe-in-getting-by" },
+  { id:"kapellich-dolce",     artist:"kapellich",            track:"dolcefarniente",          url:"https://soundcloud.com/kapellich/260526-dolcefarniente", secret:"s-VGPVAOg38gv" },
+  { id:"indo-aeroplane",      artist:"Indo (DougieC)",       track:"Aeroplane Mode",          url:"https://soundcloud.com/indo-dougiec/aeroplane-mode" },
+  { id:"drumatic-selectah",   artist:"Drumatic",             track:"Selectah",                url:"https://soundcloud.com/charlie-clarkson-berry/selectah-2" },
+  { id:"stvpid-seeme",        artist:"STVP!D",               track:"See Me",                  url:"https://soundcloud.com/stvpid/stvpid-see-me", secret:"s-dHaXvrMEfNg" },
+  { id:"legoisland-pool",     artist:"lego island dj",       track:"swimming pool (TBD)",     url:"https://soundcloud.com/lego-island-dj/swimming-pool-4", secret:"s-wUZpteYg7oa" },
+  { id:"prototype-cls",       artist:"PR0T0TYPE",            track:"Classic L's",             url:"https://soundcloud.com/prototype0/cls", secret:"s-eHBQwbEI7qb" },
+  { id:"williamsmix-ambi",    artist:"Williams Mix",         track:"Ambi",                    url:"https://soundcloud.com/illontgomerie/ambi-wav", secret:"s-wLDCybfej1i" },
+  { id:"tdel-e39",            artist:"tdel",                 track:"E39",                     url:"https://soundcloud.com/tdel/tdel-e39", secret:"s-TxilPkYOH3t" },
+  { id:"ravedeath-storm",     artist:"Ravedeath1993",        track:"Waiting For The Storm",   url:"https://soundcloud.com/ravedeath1993/waiting-for-the-storm", secret:"s-o1Lj6j5AOUW" },
+  { id:"trident-mysteries",   artist:"Trident",              track:"Mysteries",               url:"https://soundcloud.com/trident-uk/mysteries", secret:"s-UWewWB3eML3" },
+  { id:"aquarelle-lumos",     artist:"AquaRelle",            track:"Lumos",                   url:"https://soundcloud.com/tsuki-gurregu/lumos" },
+  { id:"saluu-forever",       artist:"saluu",                track:"forever",                 url:"https://soundcloud.com/saluu-uk/forever", secret:"s-kR9ar29NMkD" },
+  { id:"graish-syrup",        artist:"Graish",               track:"Syrup",                   url:"https://soundcloud.com/graish/syrup" },
+
+  // --- awaiting embeddable SoundCloud links ---
+  { id:"bpatrol-staraligning",artist:"B-Patrol",             track:"Star Aligning",           placeholder:true, note:"Sent via WeTransfer — needs a SoundCloud upload to embed." },
+  { id:"axwax-rahmagic",      artist:"AxWax",                track:"Rah Magic",               placeholder:true, note:"Currently a Faircamp link — needs a SoundCloud upload to embed." },
+  { id:"newtype-sector9",     artist:"Newtype",              track:"Sector 9",                placeholder:true, note:"No link supplied yet." },
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function embedSrc(t){
+  let u = t.url;
+  if (t.secret) u += "?secret_token=" + t.secret;
+  const enc = encodeURIComponent(u);
+  return "https://w.soundcloud.com/player/?url=" + enc +
+    "&color=%23ff8351&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false";
+}
+
+const selected = new Set();
+const tracksEl = document.getElementById("tracks");
+
+function render(){
+  tracksEl.innerHTML = "";
+  TRACKS.forEach((t, i) => {
+    const n = i + 1;
+    const card = document.createElement("div");
+    card.className = "card" + (t.placeholder ? " placeholder" : "");
+    card.dataset.id = t.id;
+
+    const body = t.placeholder
+      ? `<div class="note">⏳ ${t.note}</div>`
+      : `<iframe class="embed" loading="lazy" scrolling="no" frameborder="no" allow="autoplay" src="${embedSrc(t)}"></iframe>`;
+
+    const voteCtl = t.placeholder
+      ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
+      : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`;
+
+    card.innerHTML = `
+      <div class="row">
+        <div class="num">${n}</div>
+        <div class="meta">
+          <div class="artist">${t.artist}</div>
+          <div class="track">${t.track}</div>
+        </div>
+        ${voteCtl}
+      </div>
+      ${body}`;
+    tracksEl.appendChild(card);
+  });
+
+  tracksEl.querySelectorAll('input[type=checkbox]:not([disabled])').forEach(cb=>{
+    cb.addEventListener("change", onToggle);
+  });
+}
+
+function onToggle(e){
+  const id = e.target.dataset.id;
+  if (e.target.checked){
+    if (selected.size >= MAX_VOTES){ e.target.checked = false; return; }
+    selected.add(id);
+  } else {
+    selected.delete(id);
+  }
+  syncUI();
+}
+
+function syncUI(){
+  document.getElementById("count").textContent = selected.size;
+  // highlight selected cards
+  tracksEl.querySelectorAll(".card").forEach(c=>{
+    c.classList.toggle("selected", selected.has(c.dataset.id));
+  });
+  // lock remaining checkboxes when 3 reached
+  const full = selected.size >= MAX_VOTES;
+  tracksEl.querySelectorAll('input[type=checkbox]:not([disabled])').forEach(cb=>{
+    const wrap = cb.closest(".vote");
+    if (!cb.checked){ cb.disabled = full; wrap.classList.toggle("disabled", full); }
+    else { cb.disabled = false; wrap.classList.remove("disabled"); }
+  });
+  validateSubmit();
+}
+
+function validateSubmit(){
+  const name = document.getElementById("voterName").value.trim();
+  const handle = document.getElementById("voterHandle").value.trim();
+  const ok = selected.size === MAX_VOTES && name && handle;
+  document.getElementById("submitBtn").disabled = !ok;
+  return ok;
+}
+
+document.getElementById("voterName").addEventListener("input", validateSubmit);
+document.getElementById("voterHandle").addEventListener("input", validateSubmit);
+
+/* ============================================================
+   SUBMIT  (front-end only for now — backend wired next step)
+   ============================================================ */
+// The checkbox option text the form expects, per track. Must match the form options exactly.
+function trackLabel(id){
+  const t = TRACKS.find(x => x.id === id);
+  return t ? (t.artist + " - " + t.track) : id;
+}
+
+document.getElementById("submitBtn").addEventListener("click", async ()=>{
+  if (!validateSubmit()) return;
+  const msg = document.getElementById("barmsg");
+  const btn = document.getElementById("submitBtn");
+
+  if (localStorage.getItem("ehfl_voted")){
+    msg.className = "barmsg";
+    msg.textContent = "It looks like this browser has already voted. (Soft check, final dedupe is by handle.)";
+    return;
+  }
+
+  const name   = document.getElementById("voterName").value.trim();
+  const handle = document.getElementById("voterHandle").value.trim();
+  const picks  = [...selected];
+
+  if (!BACKEND_READY){
+    console.log("VOTE (preview, backend not wired):", {name, handle, picks: picks.map(trackLabel)});
+    localStorage.setItem("ehfl_voted", "1");
+    msg.className = "barmsg ok";
+    msg.textContent = "Thanks, your 3 picks are recorded. (Preview mode, backend not wired yet.)";
+    btn.disabled = true;
+    return;
+  }
+
+  btn.disabled = true;
+  msg.className = "barmsg"; msg.textContent = "Sending your vote...";
+  try {
+    const fd = new FormData();
+    fd.append(ENTRY_NAME, name);
+    fd.append(ENTRY_HANDLE, handle);
+    picks.forEach(id => fd.append(ENTRY_TRACKS, trackLabel(id)));
+    await fetch(FORM_ACTION, {method:"POST", mode:"no-cors", body:fd});
+    localStorage.setItem("ehfl_voted", "1");
+    msg.className = "barmsg ok";
+    msg.textContent = "Thanks, your 3 picks are in. You can close the page now.";
+  } catch(err){
+    msg.className = "barmsg";
+    msg.textContent = "That didn't send. Check your connection and try again.";
+    btn.disabled = false;
+  }
+});
+
+/* ============================================================
+   LIVE STANDINGS  (reads the Tally tab published as CSV)
+   ============================================================ */
+function parseCSV(text){
+  return text.trim().split(/\r?\n/).map(line=>{
+    const cells=[]; let cur=""; let q=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(q){
+        if(c==='"'){ if(line[i+1]==='"'){cur+='"'; i++;} else q=false; }
+        else cur+=c;
+      } else {
+        if(c==='"') q=true;
+        else if(c===',') { cells.push(cur); cur=""; }
+        else cur+=c;
+      }
+    }
+    cells.push(cur);
+    return cells;
+  });
+}
+
+function splitLabel(label){
+  const i = label.indexOf(" - ");
+  return i<0 ? {artist:label, title:""} : {artist:label.slice(0,i), title:label.slice(i+3)};
+}
+
+async function loadStandings(){
+  if(!SHOW_LEADERBOARD) return;
+  const box=document.getElementById("standings");
+  const list=document.getElementById("stList");
+  box.style.display="block";
+  if(!LEADERBOARD_CSV){
+    list.innerHTML='<li class="st-empty">Standings will appear here once voting opens.</li>';
+    return;
+  }
+  try{
+    const url = LEADERBOARD_CSV + (LEADERBOARD_CSV.includes("?")?"&":"?") + "t=" + Date.now();
+    const res = await fetch(url);
+    const data = parseCSV(await res.text())
+      .map(r=>({label:(r[0]||"").trim(), votes:parseInt((r[1]||"0").trim(),10)||0}))
+      .filter(d=>d.label);
+    data.sort((a,b)=>b.votes-a.votes);
+    if(data.reduce((s,d)=>s+d.votes,0)===0){
+      list.innerHTML='<li class="st-empty">No votes in yet — be the first.</li>';
+      return;
+    }
+    list.innerHTML = data.slice(0,TOP_N).map((d,i)=>{
+      const {artist,title}=splitLabel(d.label);
+      return `<li class="st-item">
+        <span class="st-rank${i<3?' top':''}">${i+1}</span>
+        <span class="st-name"><b>${artist}</b> <span>${title}</span></span>
+        <span class="st-votes">${d.votes}</span>
+      </li>`;
+    }).join("");
+  }catch(e){
+    list.innerHTML='<li class="st-empty">Standings unavailable right now.</li>';
+  }
+}
+
+/* ============================================================
+   PASSWORD GATE
+   ============================================================ */
+function unlock(){
+  document.getElementById("gate").style.display = "none";
+  document.getElementById("page").style.display = "block";
+  document.getElementById("bar").style.display = "block";
+  render(); syncUI();
+  loadStandings();
+  if(SHOW_LEADERBOARD && LEADERBOARD_CSV) setInterval(loadStandings, 30000);
+}
+function tryUnlock(){
+  const v = document.getElementById("gateInput").value.trim();
+  if (v === PAGE_PASSWORD){ sessionStorage.setItem("ehfl_ok","1"); unlock(); }
+  else { document.getElementById("gateError").textContent = "Wrong password — check the Patreon post."; }
+}
+document.getElementById("gateBtn").addEventListener("click", tryUnlock);
+document.getElementById("gateInput").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+if (sessionStorage.getItem("ehfl_ok")) unlock();
+</script>
+</body>
+</html>
