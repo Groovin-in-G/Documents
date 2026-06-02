@@ -158,7 +158,7 @@
   </header>
 
   <div class="intro">
-    <p>Our track-by-track feedback from the Event Horizons feedback livestreams. Two streams done, one more to come, so this page will keep growing.</p>
+    <p>Our track-by-track feedback from the Event Horizons feedback livestreams. Two streams done, one more to come, and then the final voting on Patreon mid-June.</p>
     <div class="legend-row">
       <span class="legend"><span class="dot ging"></span><b>Groovin in G</b></span>
       <span class="legend"><span class="dot hs"></span><b>Human Synthetics</b></span>
@@ -575,7 +575,7 @@ function buildPlayers(){
     if(!s.youtube) return;
     const id = "ytplayer-" + s.n;
     if(ytPlayers[s.n] || !document.getElementById(id)) return;
-    ytPlayers[s.n] = new YT.Player(id, { videoId: videoId(s.youtube), playerVars:{ rel:0, modestbranding:1 } });
+    ytPlayers[s.n] = new YT.Player(id, { videoId: videoId(s.youtube), playerVars:{ rel:0, modestbranding:1, origin: location.origin } });
   });
 }
 
