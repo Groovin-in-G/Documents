@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Blue Dawn Records — Event Horizons — Feedback</title>
+<link rel="icon" type="image/png" href="assets/blue-dawn-logo.png" />
+<link rel="apple-touch-icon" href="assets/blue-dawn-logo.png" />
 <style>
   :root{
     --bg:#070d18; --panel:#0e1626; --panel-2:#13203360;
@@ -589,8 +591,14 @@ function jumpTo(session, seconds){
   }
 }
 
-function trackRow(t, s, i){
-  const hasStart = (typeof t.ytStart === "number");
+// Start times (seconds) per session, in track order. Pulled from the VOD auto-captions 2026-06-02.
+const STARTS = {
+  1: [592, 1598, 2249, 3089, 4260, 4764, 5433, 6007, 6705, 7396],
+  2: [355, 1293, 2392, 3104, 3769, 4460, 4865, 6169, 6693, 7241]
+};
+
+function trackRow(t, s, i, start){
+  const hasStart = (typeof start === "number");
   const jumpHint = hasStart ? `<span class="trk-jump">▶ jumps video</span>` : "";
   let media = "";
   if(!t.placeholder){
@@ -602,7 +610,7 @@ function trackRow(t, s, i){
   }
   const reviews = `<div class="reviews">${t.reviews.map(reviewBlock).join("")}</div>`;
   return `<div class="trk">
-    <button class="trk-head" data-session="${s.n}"${hasStart?` data-start="${t.ytStart}"`:""}>
+    <button class="trk-head" data-session="${s.n}"${hasStart?` data-start="${start}"`:""}>
       <span class="num">${i+1}</span>
       <span class="trk-meta"><b>${esc(t.artist)}</b> <span>${esc(t.track)}</span></span>
       ${jumpHint}
@@ -618,7 +626,7 @@ function render(){
     const watch = s.youtube ? `<a class="sesh-link" href="${s.youtube}" target="_blank" rel="noopener">▶ Open on YouTube</a>` : "";
     const head = `<div class="sesh">Session ${s.n} <span>— ${esc(s.label)}</span>${watch}</div>`;
     const player = s.youtube ? `<div class="ytwrap"><div id="ytplayer-${s.n}"></div></div>` : "";
-    const rows = s.tracks.map((t,i)=>trackRow(t, s, i)).join("");
+    const rows = s.tracks.map((t,i)=>trackRow(t, s, i, (STARTS[s.n]||[])[i])).join("");
     return head + player + `<div class="trklist">${rows}</div>`;
   }).join("");
   buildPlayers();
