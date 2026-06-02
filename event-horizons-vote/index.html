@@ -402,7 +402,7 @@ document.getElementById("submitBtn").addEventListener("click", async ()=>{
     await fetch(FORM_ACTION, {method:"POST", mode:"no-cors", body:fd});
     localStorage.setItem("ehfl_voted", "1");
     msg.className = "barmsg ok";
-    msg.textContent = "Thanks, your 3 picks are in. You can close the page now.";
+    msg.textContent = "Thanks for voting on Event Horizons. Your 3 picks are in. See you at first light.";
   } catch(err){
     msg.className = "barmsg";
     msg.textContent = "That didn't send. Check your connection and try again.";
