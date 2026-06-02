@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Blue Dawn Records — Event Horizons — Feedback</title>
+<style>
+  :root{
+    --bg:#070d18; --panel:#0e1626; --panel-2:#13203360;
+    --line:#23344f; --text:#eaf0fb; --muted:#93a3c0;
+    --accent:#ff8351; --accent-2:#f0b15a; --hs:#6fb6ff; --ok:#5fd3a6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 50% -8%, rgba(90,150,230,.18), transparent 60%),
+      radial-gradient(1300px 700px at 50% 118%, rgba(255,150,80,.16), transparent 55%),
+      radial-gradient(900px 500px at 90% 8%, rgba(240,177,90,.10), transparent 55%),
+      linear-gradient(180deg,#0a1322 0%, #070d18 45%, #0b1322 100%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; min-height:100vh;
+  }
+  a{color:var(--accent)}
+
+  /* ---- Password gate ---- */
+  #gate{position:fixed; inset:0; z-index:50; background:rgba(3,4,8,.97);
+    display:flex; align-items:center; justify-content:center; padding:24px;}
+  #gate .box{width:100%; max-width:420px; background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:32px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  #gate .glogo{width:108px; height:108px; border-radius:50%; margin:0 auto 18px; display:block;
+    box-shadow:0 0 0 1px var(--line), 0 12px 40px rgba(255,131,81,.18)}
+  #gate h1{font-size:13px; letter-spacing:.30em; text-transform:uppercase; margin:0 0 4px; color:var(--accent-2)}
+  #gate .gsub{font-size:22px; font-weight:800; letter-spacing:.04em; margin:0 0 6px}
+  #gate p{color:var(--muted); font-size:14px; margin:0 0 22px}
+  #gate input{width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font-size:15px; text-align:center;}
+  #gate button{margin-top:14px; background:linear-gradient(180deg,var(--accent),#2aa9e0); color:#04121a;
+    border:0; font-weight:800; padding:12px 22px; border-radius:10px; cursor:pointer; font-size:15px;}
+  #gateError{color:#ff5d73; font-size:13px; min-height:18px; margin-top:10px}
+
+  /* ---- Layout ---- */
+  .wrap{max-width:900px; margin:0 auto; padding:40px 20px 120px}
+  header.hero{text-align:center; margin-bottom:8px}
+  .hero .logo{width:160px; height:160px; border-radius:50%; display:block; margin:0 auto 22px;
+    box-shadow:0 0 0 1px var(--line), 0 18px 60px rgba(255,131,81,.20), 0 0 90px rgba(90,150,230,.12)}
+  .kicker{color:var(--accent-2); letter-spacing:.34em; text-transform:uppercase; font-size:11px}
+  .title{font-size:clamp(30px,6vw,52px); font-weight:800; letter-spacing:.02em; margin:8px 0 2px;
+    background:linear-gradient(180deg,#fff, #ffd9a8 58%, #ff8a5c);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 2px 34px rgba(255,131,81,.22);}
+  .subtitle{font-style:italic; color:#cdd7ee; font-size:clamp(15px,3vw,20px); margin:0}
+
+  .intro{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 20px; margin:26px 0; font-size:14px; color:var(--muted)}
+  .intro b{color:#fff}
+  .legend{display:inline-flex; align-items:center; gap:6px; margin-right:16px}
+  .dot{width:9px; height:9px; border-radius:50%}
+  .dot.ging{background:var(--accent)} .dot.hs{background:var(--hs)}
+
+  .sesh{font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent-2);
+    margin:40px 0 8px; border-bottom:1px solid var(--line); padding-bottom:8px; font-weight:700}
+  .sesh span{color:var(--muted); letter-spacing:.04em; text-transform:none; font-weight:400; font-style:italic}
+
+  /* ---- Track cards ---- */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px 18px; margin:14px 0;}
+  .card .row{display:flex; align-items:baseline; gap:12px; margin-bottom:10px}
+  .num{flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+    background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
+  .meta{flex:1 1 auto; min-width:0}
+  .meta .artist{font-weight:700; font-size:16px}
+  .meta .track{color:var(--muted); font-size:13px}
+  .meta .alt{color:var(--muted); font-size:12px; font-style:italic; opacity:.8}
+  .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
+  .noembed{font-size:13px; color:var(--muted); background:var(--panel-2); border:1px dashed var(--line);
+    border-radius:8px; padding:10px 12px}
+  .embed.yt{height:230px}
+  .watch{margin-top:8px; font-size:13px}
+  .watch a{color:var(--accent); text-decoration:none}
+  .watch a:hover{text-decoration:underline}
+
+  .reviews{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:14px}
+  @media (max-width:680px){ .reviews{grid-template-columns:1fr} }
+  .rv-head{display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:13px; font-weight:700}
+  .rv-head.ging .who{color:var(--accent)} .rv-head.hs .who{color:var(--hs)}
+  .rv-head .dot{flex:0 0 auto}
+  .rv-points{margin:0; padding-left:18px; color:#cdd7ea; font-size:13.5px; line-height:1.55}
+  .rv-points li{margin:4px 0}
+  .footnote{text-align:center; color:var(--muted); font-size:12px; margin-top:34px}
+</style>
+</head>
+<body>
+
+<!-- ====== PASSWORD GATE ====== -->
+<div id="gate">
+  <div class="box">
+    <img class="glogo" src="assets/blue-dawn-logo.png" alt="Blue Dawn Records" />
+    <h1>Blue Dawn Records</h1>
+    <div class="gsub">Event Horizons</div>
+    <p>Feedback page is password protected.<br/>Enter the password from the Patreon post.</p>
+    <input id="gateInput" type="password" placeholder="Password" autocomplete="off" />
+    <div id="gateError"></div>
+    <button id="gateBtn">Enter</button>
+  </div>
+</div>
+
+<!-- ====== PAGE ====== -->
+<div class="wrap" id="page" style="display:none">
+  <header class="hero">
+    <img class="logo" src="assets/blue-dawn-logo.png" alt="Blue Dawn Records" />
+    <div class="kicker">Blue Dawn Records</div>
+    <h1 class="title">EVENT HORIZONS</h1>
+    <p class="subtitle">Livestream feedback</p>
+  </header>
+
+  <div class="intro">
+    Our track-by-track feedback from the Event Horizons feedback livestreams.
+    <span class="legend"><span class="dot ging"></span><b>Groovin in G</b></span>
+    <span class="legend"><span class="dot hs"></span><b>Human Synthetics</b></span>
+    <br/>Two streams done, one more to come, so this page will keep growing.
+  </div>
+
+  <div id="content"></div>
+
+  <p class="footnote">Tracks are unreleased — please don't share this page or the password outside the patron group.</p>
+</div>
+
+<script>
+const PAGE_PASSWORD = "firstlight";
+const AUTHORS = { ging:"Groovin in G", hs:"Human Synthetics" };
+
+/* ============================================================
+   FEEDBACK DATA  (organised by livestream session)
+   - Each session has tracks; each track has reviews per author.
+   - author: "hs" (Human Synthetics) or "ging" (Groovin in G).
+   - placeholder:true = no SoundCloud embed yet (optional `link`).
+   - To add Session 3: push a new {n, label, tracks:[...]} object.
+   ============================================================ */
+const SESSIONS = [
+  {
+    n:1, label:"First feedback stream",
+    tracks:[
+      { artist:"Distant Lands", track:"Crystal Visions",
+        url:"https://soundcloud.com/user-30192001/crystal-visions", secret:"s-v1uZdnhciA5",
+        reviews:[
+          {author:"hs", points:["Vocal level and EQ","Drama pre-amen","'Horn' section stereo spread","Good balance of bass and breaks","Ear candy? 8 bar transitional bits n bobs"]},
+          {author:"ging", points:[
+            "Coors vocal, good suspense in the intro.",
+            "1:33 — very snappy metallic break, great contrast from the other elements, which are much warmer.",
+            "Tight drum layering, sub kick on the downbeat.",
+            "Filtersweeps were very cool with the amen, resonance pitch rolls upwards too, I liked how they became part of the groove.",
+            "3:15 — too many elements fighting for space, track got ducked out a bit. You can hear this a bit on the old tunes. Low mid energy is usually where the problems lie.",
+            "Nice break swapping tricks, changing the processing."]}
+        ]},
+      { artist:"RJ Macready", track:"Algebrast (WIP)", alt:"also: Equidistant from Mercy",
+        url:"https://soundcloud.com/jimmy-walsh-1/tune-ideas-drums-1", secret:"s-Q36GynBBNGD",
+        reviews:[
+          {author:"hs", points:["Maybe some more minimal sections like at the beginning?","Ending?"]},
+          {author:"ging", points:[
+            "Breaks were solid and rolling.",
+            "Liked the timbre of different elements.",
+            "1:44 — flip was very cool where it was stripped back.",
+            "2:39 — could have stripped the bass in the breakdown, more tension and release.",
+            "FX dope, rolls, interesting drums timbre.",
+            "The groove worked the best when it was stripped back."]}
+        ]},
+      { artist:"Future World Machines", track:"Polaris",
+        url:"https://soundcloud.com/patrickgroll/polaris-2026-04-21-1307",
+        reviews:[
+          {author:"hs", points:["Nice bass!","Switches","Spaaace","Break width","Maybe a second break?","Sample/texture"]},
+          {author:"ging", points:[
+            "Apache, hard break to make work, well done.",
+            "Great sound design on FX.",
+            "1:59 — maybe one more element.",
+            "Sits a little bit too long in the build stage of tension, could resolve in some way. A second hook, maybe a vocal to bring everything together.",
+            "Nice vibe with only a few elements, everything had purpose.",
+            "Uncertainty, unsettled, like it's not bad yet but it could very well be!",
+            "3:50 — liked the way the drums faded a bit."]}
+        ]},
+      { artist:"Fatal Strategy", track:"With Feeling",
+        url:"https://soundcloud.com/fatal-strategy/with-feeling",
+        reviews:[
+          {author:"hs", points:["Chords working","Nice chops","Bass","Vocal chops","More drum sound variation (something other than amen)"]},
+          {author:"ging", points:[
+            "Interesting processing on the chords.",
+            "Mix balance needs work between the drums, chords & bass.",
+            "Amen too choppy, needs the hat inbetween the kick/snare hits, try sending to a dotted 1/8D delay.",
+            "1:34 — wants to be pure rolling amen vibes.",
+            "More FX, transition elements.",
+            "Using the hi-hat as a tie to get the drums rolling a bit more."]}
+        ]},
+      { artist:"Drumatic", track:"Reckless",
+        url:"https://soundcloud.com/charlie-clarkson-berry/reckless",
+        reviews:[
+          {author:"hs", points:["DROP!","Interesting pad (major flavour), would love to hear more","More bass fx would be interesting, from same parts"]},
+          {author:"ging", points:[
+            "Nice one shot drums, snappy.",
+            "0:44 — good impact on drums.",
+            "1:08 — cool and minimal groove.",
+            "1:31 — very nice bass design.",
+            "Liked the perc hits at the end of the bars used as the fill elements.",
+            "Pad, vocals, drums and bass."]}
+        ]},
+      { artist:"Monsieur Bruit", track:"Footwork Lullaby",
+        url:"https://soundcloud.com/vinu-vinu-music/footwork-lullaby", secret:"s-EDiF6MpbF8Q",
+        reviews:[
+          {author:"hs", points:["Drop","Nice textures from outset","All came together really nicely pre-breakdown"]},
+          {author:"ging", points:[
+            "Like the break grooving behind the rhythm, cool vibes & sound selection.",
+            "1:26 to 1:56 — really nice section.",
+            "2:50 — cool to have a bit of emphasis on the drop. Whip backs, builds of drama & rising energy."]}
+        ]},
+      { artist:"Tsuki & Gureggu", track:"Into The Jungle",
+        url:"https://soundcloud.com/j-b-295179176/tsuki-gureggu-into-the-jungle",
+        reviews:[
+          {author:"hs", points:["Nice sound selection","Like the mid bass with the 808","Nice break","Lovely pad and key sounds","Shuffle"]},
+          {author:"ging", points:[
+            "Very SD style FX.",
+            "My favourite kind of sound selection, every element flows into each other. Sounds play very well bouncing off each other.",
+            "Darkness vs drums vs bass.",
+            "Breakdown is wicked.",
+            "FX from my sample packs :)"]}
+        ]},
+      { artist:"KOSU", track:"Wish I Never Let Go",
+        url:"https://soundcloud.com/itskosu/wish-i-never-let-go", secret:"s-68C1rDLJbog",
+        reviews:[
+          {author:"hs", points:["Setting the scene","Intro","FX! Love the slightly atonal arp","Vocal","Good development","Vocal warping?","Pad chord lovely"]},
+          {author:"ging", points:[
+            "Very clean break swapping. Nice separation from the kick sample, the bass layer and drum breaks.",
+            "Progressional style arrangement, just keep building on the initial groove.",
+            "3:00 breakdown — get rid of the bass completely.",
+            "Like how minimal it becomes, sits in a nice space.",
+            "4:12 — could get rid of the rawww noise and replace it with something else. That's the response but you could have changed that a little as the tune went on."]}
+        ]},
+      { artist:"Indo (DougieC)", track:"Believe In Getting By",
+        url:"https://soundcloud.com/indo-dougiec/believe-in-getting-by",
+        reviews:[
+          {author:"hs", points:["Nice vocal","Great drum sound","Violin reverb/balance with vocal","Chorus?","Balance","Piano part variation, pad instead?"]},
+          {author:"ging", points:[
+            "Vocal working really well, tight sounding.",
+            "Violin making it work well in a DnB track is tough, good stuff.",
+            "Mixing, drums are super up front. Bass is too far back.",
+            "Bass impact could be a little more maybe? Try 2dB to begin with.",
+            "Vocal lead track, everything is backing it up really well."]}
+        ]},
+      { artist:"Amalgam", track:"Noble Woods",
+        url:"https://soundcloud.com/amalgam_sound/noblewoods",
+        reviews:[
+          {author:"hs", points:["Lovely guitar part","Nice bass line","Great samples","Drums +1dB","Great rolling drums","Down to nothing"]},
+          {author:"ging", points:[
+            "Nice progression between the different sections, sounds cohesive but also has distinct parts.",
+            "Breakdown to the second drop was really cool, kept the energy up.",
+            "Second half of the track was really fun to listen to, kept reinventing the tune nicely."]}
+        ]}
+    ]
+  },
+
+  {
+    n:2, label:"Monday 1 June",
+    tracks:[
+      { artist:"B-Patrol", track:"Star Aligning", alt:"played as 'Stars'", placeholder:true,
+        note:"Sent via WeTransfer — no streaming link yet.",
+        reviews:[
+          {author:"hs", points:[
+            "Almost like two tunes in one, really like the second idea",
+            "Bass line working well for me",
+            "Really like the breaks",
+            "Great pad",
+            "Maybe some more melodic parts/samples/one-shots/fx",
+            "Really solid foundation"]},
+          {author:"ging", points:[
+            "Woodwind response, could be every other. Longer phrasing.",
+            "Breaks have a great tone, very clean chop-age.",
+            "Breaks had great layering.",
+            "Bass tone.",
+            "Drums + bass + vocal pad sounded great.",
+            "Like the chord hits.",
+            "Breakdown was great.",
+            "Source Direct, Secret Liaisons vibes.",
+            "Outro — lovely rolling vibes, vocal."]}
+        ]},
+      { artist:"kapellich", track:"dolcefarniente",
+        url:"https://soundcloud.com/kapellich/260526-dolcefarniente", secret:"s-VGPVAOg38gv",
+        reviews:[
+          {author:"hs", points:[
+            "Great intro",
+            "Great concept/vibe/arrangement",
+            "Good Alan Watts sample (texture/level maybe a bit loud)",
+            "Great melodics",
+            "Bass level could come up a touch",
+            "Nice breaks",
+            "Love the sparkly sounds",
+            "Maybe sax a little too loud",
+            "Great use of silence",
+            "Nice bongo dub out/vocal sample",
+            "Maybe bongos a little loud in his section?",
+            "Ending probs can cut"]},
+          {author:"ging", points:[
+            "Lovely intro.",
+            "Glissando, pentatonic scale.",
+            "Has lots of the moments and texture like Artemis.",
+            "Call and response between different samples and synths, everything is playing different motifs.",
+            "Release on bass.",
+            "Percs a bit too loud, wrong swing? 4:52 — elements are really cool, the mix just needs a little work.",
+            "Main chord progression.",
+            "8:12 — outro could just drop out."]}
+        ]},
+      { artist:"Amalgam", track:"Noble Woods", alt:"revisited from Session 1",
+        url:"https://soundcloud.com/amalgam_sound/noblewoods",
+        reviews:[
+          {author:"hs", points:[
+            "Great intro, great space",
+            "Good fx on vocal",
+            "Cuts at the end of every 8/16",
+            "Lovely chords",
+            "Good breakdown",
+            "Great end for the comp"]},
+          {author:"ging", points:[
+            "Whip into the 1st drop a bit more.",
+            "Wah guitar.",
+            "Moves through the passages really nicely to keep the momentum.",
+            "FX at the end of the sections to make the transitions smoother.",
+            "Great sample selection — most cohesive version so far for sure.",
+            "Gated fx on the vocal."]}
+        ]},
+      { artist:"Indo (DougieC)", track:"Aeroplane Mode",
+        url:"https://soundcloud.com/indo-dougiec/aeroplane-mode",
+        reviews:[
+          {author:"hs", points:[
+            "Nice bass line",
+            "Good drums",
+            "Maybe pushed just a little too hard?",
+            "Good vocal sample",
+            "Reverb on bass and break",
+            "Effective arrangement",
+            "Subtle change in bassline for second drop",
+            "Like the hip hop lead, would be great with a bit more reverb or space"]},
+          {author:"ging", points:[
+            "Liked how full it sounded, maybe a little too distorted on the bass, loses power (have a clean sub layer).",
+            "Could have made a little bit more space for the other ingredients.",
+            "Lovely and simple, effective.",
+            "Liked the theme, progression with the synths.",
+            "Drums are really smashed — too distorted."]}
+        ]},
+      { artist:"Drumatic", track:"Selectah",
+        url:"https://soundcloud.com/charlie-clarkson-berry/selectah-2",
+        reviews:[
+          {author:"hs", points:[
+            "Nice foundational drums and bass line",
+            "Nice chords, would be cool to hear some spatial fx on them e.g. reverb, delay",
+            "Good sample",
+            "Switch for the second drop"]},
+          {author:"ging", points:[
+            "Automation on the main synth — great way to bring up the energy.",
+            "Lovely minimal drop, rolling vibes.",
+            "Bass up in level 1/2 dB.",
+            "Loads of space to play with elements & FX.",
+            "1:31 — sick switch up with the bongos.",
+            "Great rise and fall towards the drops & breakdowns.",
+            "Club ready drops.",
+            "Bass tone.",
+            "Dub mixing delays."]}
+        ]},
+      { artist:"STVP!D", track:"See Me",
+        url:"https://soundcloud.com/stvpid/stvpid-see-me", secret:"s-dHaXvrMEfNg",
+        reviews:[
+          {author:"hs", points:[
+            "Nice vibe",
+            "Maybe pushed a little too hard on the mastering",
+            "Cool chords!",
+            "Some cool arrangement fx",
+            "Take some of the parts out and add in automation"]},
+          {author:"ging", points:[
+            "Has good weight with the bass.",
+            "Could try filtering the pads down a bit smoother.",
+            "Side chain a bit obvious on the kick hit, makes it a bit choppy.",
+            "Kind of like a hip-hop breakbeat style.",
+            "Left/right pan and the break edits.",
+            "Mix."]}
+        ]},
+      { artist:"lego island dj", track:"swimming pool",
+        url:"https://soundcloud.com/lego-island-dj/swimming-pool-4", secret:"s-wUZpteYg7oa",
+        reviews:[
+          {author:"hs", points:[
+            "Nice break chops (maybe some clicks?)",
+            "Interesting arrangement",
+            "Nice pad constant",
+            "Great dub style fx!",
+            "Good flow, interesting and switch-y but cohesive",
+            "Deconstructed jungle/breaks/idm — I like it!",
+            "Post-modern yet atmospheric",
+            "Like the very high frequency hi-hats"]},
+          {author:"ging", points:[
+            "0:14 — could have dropped in there.",
+            "Demonstration in drum technique, liked it with the softer break.",
+            "Interplay with the different breaks.",
+            "Lots of great break tricks and techniques: whips, break swapping, low pitch.",
+            "3:40 — just the hat, and it was lovely.",
+            "New sections.",
+            "Give us silence, even briefly.",
+            "Proper breakdown.",
+            "Outro — smooth.",
+            "Dubby chords at the end."]}
+        ]},
+      { artist:"saluu", track:"forever",
+        url:"https://soundcloud.com/saluu-uk/forever", secret:"s-kR9ar29NMkD",
+        reviews:[
+          {author:"hs", points:[
+            "Love the break",
+            "Great bass chord progression",
+            "Nice atmospheres/autonomic vibes",
+            "Cool breakdown strings",
+            "Nice arrangement tricks later on e.g. dropping the kick"]},
+          {author:"ging", points:[
+            "Lovely texture in the pads + vocal layers.",
+            "1:09 — great drop and impact.",
+            "Some distorted bass layers could really land the idea.",
+            "Great vibes.",
+            "Nice switch up to the drums & bass section.",
+            "Feel the emotion from the strings — emotive.",
+            "Could have added a little kick back to the drums at the end of the bars, or a roll kick.",
+            "Needed maybe one more element with the stripped back sections, like a ride."]}
+        ]},
+      { artist:"Graish", track:"Syrup",
+        url:"https://soundcloud.com/graish/syrup",
+        reviews:[
+          {author:"hs", points:[
+            "Tearer!",
+            "Love the Apache",
+            "Nice call and response melodic parts",
+            "I think it's mastered pretty well!",
+            "Like the reso bass sound",
+            "Great break work, nice texture to the sound",
+            "Syrup sample?"]},
+          {author:"ging", points:[
+            "Excellent mix and drop tone. Had a great old school flavour.",
+            "Amen roller — loved the fills with the snares.",
+            "1:13 — acid flavour on the bass.",
+            "Apache was dope.",
+            "I like the way you reworked the original idea into the different sections.",
+            "Really clean production to lead into the drops, little rolls or fills.",
+            "Little bits of progression in the second half of the tune."]}
+        ]},
+      { artist:"AxWax", track:"Rah Magic", placeholder:true,
+        link:"https://faircamp.axwax.eu/axwax-rah-magic/", note:"On Faircamp (not SoundCloud) — listen via the link.",
+        reviews:[
+          {author:"hs", points:[
+            "Interesting breaks spatial effects",
+            "Like the arrangement and progression",
+            "Cool bass line, working well with drums",
+            "Like the percussion coming in, really effective",
+            "Nice break chops",
+            "Cool effective sections",
+            "Break down",
+            "Cool artistic imprint — sounds like AxWax!"]},
+          {author:"ging", points:[
+            "I like hearing all the raw breaks and FX.",
+            "It felt like it wanted a bass swap to a more sustained bass.",
+            "Hitting the root note a bit more with the bass section.",
+            "Organ is a bit contrasted to the rest of the track.",
+            "Break swapping was cool.",
+            "Swap the bass when the organ came in, sustain/build bass.",
+            "Sounded cool at the end when everything came together."]}
+        ]}
+    ]
+  }
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function embedSrc(t){
+  let u = t.url;
+  if (t.secret) u += "?secret_token=" + t.secret;
+  return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(u) +
+    "&color=%23ff8351&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false";
+}
+
+function reviewBlock(rv){
+  const who = AUTHORS[rv.author] || rv.author;
+  const pts = rv.points.map(p=>`<li>${esc(p)}</li>`).join("");
+  return `<div class="review">
+    <div class="rv-head ${rv.author}"><span class="dot ${rv.author}"></span><span class="who">${esc(who)}</span></div>
+    <ul class="rv-points">${pts}</ul>
+  </div>`;
+}
+
+function trackCard(t, n){
+  const alt = t.alt ? `<div class="alt">${esc(t.alt)}</div>` : "";
+  let player;
+  if (!t.placeholder){
+    player = `<iframe class="embed" loading="lazy" scrolling="no" frameborder="no" allow="autoplay" src="${embedSrc(t)}"></iframe>`;
+  } else if (t.ytId){
+    player = `<iframe class="embed yt" loading="lazy" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen src="https://www.youtube.com/embed/${t.ytId}?start=${t.ytStart||0}"></iframe>`;
+  } else {
+    const link = t.link ? ` <a href="${t.link}" target="_blank" rel="noopener">Open link →</a>` : "";
+    player = `<div class="noembed">⏳ ${esc(t.note || "No stream link yet.")}${link}</div>`;
+  }
+  const watch = t.ytId
+    ? `<div class="watch"><a href="https://youtu.be/${t.ytId}?t=${t.ytStart||0}" target="_blank" rel="noopener">▶ Watch this feedback on the livestream</a></div>`
+    : "";
+  return `<div class="card">
+    <div class="row">
+      <div class="num">${n}</div>
+      <div class="meta">
+        <div class="artist">${esc(t.artist)}</div>
+        <div class="track">${esc(t.track)}</div>
+        ${alt}
+      </div>
+    </div>
+    ${player}
+    ${watch}
+    <div class="reviews">${t.reviews.map(reviewBlock).join("")}</div>
+  </div>`;
+}
+
+function render(){
+  const el = document.getElementById("content");
+  el.innerHTML = SESSIONS.map(s=>{
+    const head = `<div class="sesh">Session ${s.n} <span>— ${esc(s.label)}</span></div>`;
+    const cards = s.tracks.map((t,i)=>trackCard(t, i+1)).join("");
+    return head + cards;
+  }).join("");
+}
+
+/* ============================================================
+   PASSWORD GATE
+   ============================================================ */
+function unlock(){
+  document.getElementById("gate").style.display = "none";
+  document.getElementById("page").style.display = "block";
+  render();
+}
+function tryUnlock(){
+  const v = document.getElementById("gateInput").value.trim();
+  if (v === PAGE_PASSWORD){ sessionStorage.setItem("ehfl_ok","1"); unlock(); }
+  else { document.getElementById("gateError").textContent = "Wrong password — check the Patreon post."; }
+}
+document.getElementById("gateBtn").addEventListener("click", tryUnlock);
+document.getElementById("gateInput").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+if (sessionStorage.getItem("ehfl_ok")) unlock();
+</script>
+</body>
+</html>
