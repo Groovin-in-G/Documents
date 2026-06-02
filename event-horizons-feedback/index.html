@@ -599,7 +599,7 @@ const STARTS = {
 
 function trackRow(t, s, i, start){
   const hasStart = (typeof start === "number");
-  const jumpHint = hasStart ? `<span class="trk-jump">▶ jumps video</span>` : "";
+  const jumpHint = hasStart ? `<span class="trk-jump">▶ jump video</span>` : "";
   let media = "";
   if(!t.placeholder){
     media = `<iframe class="embed lazy" data-src="${embedSrc(t)}" loading="lazy" scrolling="no" frameborder="no" allow="autoplay"></iframe>`;
@@ -637,16 +637,21 @@ document.getElementById("content").addEventListener("click", function(e){
   const head = e.target.closest(".trk-head");
   if(!head) return;
   const panel = head.nextElementSibling;
-  if(panel.hasAttribute("hidden")){
-    panel.removeAttribute("hidden");
-    head.classList.add("open");
-    const f = panel.querySelector("iframe.lazy");
-    if(f && !f.src){ f.src = f.dataset.src; }
-    if(head.dataset.start !== undefined) jumpTo(parseInt(head.dataset.session,10), parseInt(head.dataset.start,10));
-  } else {
+  if(!panel.hasAttribute("hidden")){          // already open → close it
     panel.setAttribute("hidden","");
     head.classList.remove("open");
+    return;
   }
+  // single-open accordion: close any other open track first
+  document.querySelectorAll("#content .trk-panel:not([hidden])").forEach(p=>{
+    p.setAttribute("hidden","");
+    p.previousElementSibling.classList.remove("open");
+  });
+  panel.removeAttribute("hidden");
+  head.classList.add("open");
+  const f = panel.querySelector("iframe.lazy");
+  if(f && !f.src){ f.src = f.dataset.src; }
+  if(head.dataset.start !== undefined) jumpTo(parseInt(head.dataset.session,10), parseInt(head.dataset.start,10));
 });
 
 /* ============================================================
