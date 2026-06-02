@@ -375,7 +375,7 @@ document.getElementById("submitBtn").addEventListener("click", async ()=>{
 
   if (localStorage.getItem("ehfl_voted")){
     msg.className = "barmsg";
-    msg.textContent = "It looks like this browser has already voted. (Soft check, final dedupe is by handle.)";
+    msg.textContent = "It looks like this browser has already voted.";
     return;
   }
 
