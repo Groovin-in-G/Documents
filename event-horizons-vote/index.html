@@ -93,6 +93,10 @@
     display:flex; align-items:baseline; gap:8px; padding:4px 0; font-size:12.5px;
     break-inside:avoid; border-bottom:1px solid rgba(255,255,255,.04);
   }
+  .medal{flex:0 0 auto; width:14px; text-align:center; font-size:12px; line-height:1}
+  .medal.m1{color:#ffcf3f; text-shadow:0 0 6px rgba(255,207,63,.55)}
+  .medal.m2{color:#cdd3dc; text-shadow:0 0 6px rgba(205,211,220,.45)}
+  .medal.m3{color:#e08b46; text-shadow:0 0 6px rgba(224,139,70,.45)}
   .st-rank{flex:0 0 auto; width:18px; text-align:right; color:var(--muted); font-weight:700}
   .st-rank.top{color:var(--accent-2)}
   .st-name{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -459,7 +463,9 @@ async function loadStandings(){
     }
     list.innerHTML = data.slice(0,TOP_N).map((d,i)=>{
       const {artist,title}=splitLabel(d.label);
+      const medal = i<3 ? `<span class="medal m${i+1}">★</span>` : `<span class="medal"></span>`;
       return `<li class="st-item">
+        ${medal}
         <span class="st-rank${i<3?' top':''}">${i+1}</span>
         <span class="st-name"><b>${artist}</b> <span>${title}</span></span>
         <span class="st-votes">${d.votes}</span>
