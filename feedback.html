@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Blue Dawn Records — Event Horizons — Feedback</title>
+<link rel="icon" type="image/png" href="assets/blue-dawn-logo.png" />
+<link rel="apple-touch-icon" href="assets/blue-dawn-logo.png" />
+<style>
+  :root{
+    --bg:#070d18; --panel:#0e1626; --panel-2:#13203360;
+    --line:#23344f; --text:#eaf0fb; --muted:#93a3c0;
+    --accent:#ff8351; --accent-2:#f0b15a; --hs:#6fb6ff; --ok:#5fd3a6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 50% -8%, rgba(90,150,230,.18), transparent 60%),
+      radial-gradient(1300px 700px at 50% 118%, rgba(255,150,80,.16), transparent 55%),
+      radial-gradient(900px 500px at 90% 8%, rgba(240,177,90,.10), transparent 55%),
+      linear-gradient(180deg,#0a1322 0%, #070d18 45%, #0b1322 100%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; min-height:100vh;
+  }
+  a{color:var(--accent)}
+
+  /* ---- Password gate ---- */
+  #gate{position:fixed; inset:0; z-index:50; background:rgba(3,4,8,.97);
+    display:flex; align-items:center; justify-content:center; padding:24px;}
+  #gate .box{width:100%; max-width:420px; background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:32px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  #gate .glogo{width:108px; height:108px; border-radius:50%; margin:0 auto 18px; display:block;
+    box-shadow:0 0 0 1px var(--line), 0 12px 40px rgba(255,131,81,.18)}
+  #gate h1{font-size:13px; letter-spacing:.30em; text-transform:uppercase; margin:0 0 4px; color:var(--accent-2)}
+  #gate .gsub{font-size:22px; font-weight:800; letter-spacing:.04em; margin:0 0 6px}
+  #gate p{color:var(--muted); font-size:14px; margin:0 0 22px}
+  #gate input{width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font-size:15px; text-align:center;}
+  #gate button{margin-top:14px; background:linear-gradient(180deg,var(--accent),#2aa9e0); color:#04121a;
+    border:0; font-weight:800; padding:12px 22px; border-radius:10px; cursor:pointer; font-size:15px;}
+  #gateError{color:#ff5d73; font-size:13px; min-height:18px; margin-top:10px}
+
+  /* ---- Layout ---- */
+  .wrap{max-width:900px; margin:0 auto; padding:40px 20px 120px}
+  header.hero{text-align:center; margin-bottom:8px}
+  .hero .logo{width:160px; height:160px; border-radius:50%; display:block; margin:0 auto 22px;
+    box-shadow:0 0 0 1px var(--line), 0 18px 60px rgba(255,131,81,.20), 0 0 90px rgba(90,150,230,.12)}
+  .kicker{color:var(--accent-2); letter-spacing:.34em; text-transform:uppercase; font-size:11px}
+  .title{font-size:clamp(30px,6vw,52px); font-weight:800; letter-spacing:.02em; margin:8px 0 2px;
+    background:linear-gradient(180deg,#fff, #ffd9a8 58%, #ff8a5c);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 2px 34px rgba(255,131,81,.22);}
+  .subtitle{font-style:italic; color:#cdd7ee; font-size:clamp(15px,3vw,20px); margin:0}
+
+  .intro{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 20px; margin:26px 0; font-size:14px; color:var(--muted)}
+  .intro p{margin:0 0 14px}
+  .intro b{color:#fff}
+  .legend-row{display:flex; gap:22px; flex-wrap:wrap; padding-top:12px; border-top:1px solid var(--line)}
+  .legend{display:inline-flex; align-items:center; gap:7px; font-size:13px}
+  .dot{width:9px; height:9px; border-radius:50%}
+  .dot.ging{background:var(--accent)} .dot.hs{background:var(--hs)}
+
+  .sesh{font-size:24px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent-2);
+    margin:46px 0 10px; border-bottom:1px solid var(--line); padding-bottom:10px; font-weight:800;
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .sesh span{color:var(--muted); letter-spacing:.01em; text-transform:none; font-weight:400; font-style:italic; font-size:16px}
+  .sesh-link{font-size:13px; color:var(--accent); text-decoration:none; font-weight:600;
+    letter-spacing:normal; text-transform:none; margin-left:auto}
+  .sesh-link:hover{text-decoration:underline}
+
+  /* ---- Top "watch the streams" index ---- */
+  .streams{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 20px; margin:22px 0}
+  .ix-head{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent-2); margin-bottom:10px}
+  .ix-list{list-style:none; margin:0; padding:0}
+  .ix-list li{display:flex; align-items:baseline; gap:10px; padding:6px 0; font-size:14px; flex-wrap:wrap}
+  .ix-list li + li{border-top:1px solid rgba(255,255,255,.04)}
+  .ix-list b{color:#fff}
+  .ix-sub{color:var(--muted); flex:1 1 auto; font-style:italic; font-size:13px}
+  .ix-list a{color:var(--accent); text-decoration:none; font-weight:600}
+  .ix-list a:hover{text-decoration:underline}
+  .soon{color:var(--muted); font-size:13px; font-style:italic}
+
+  /* ---- Embedded session player ---- */
+  .ytwrap{position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden;
+    background:#000; border:1px solid var(--line); margin-bottom:16px}
+  .ytwrap > div, .ytwrap iframe{position:absolute; inset:0; width:100%!important; height:100%!important; border:0}
+
+  /* ---- Accordion track rows ---- */
+  .trklist{margin-bottom:8px}
+  .trk{border:1px solid var(--line); border-radius:12px; margin:8px 0; background:var(--panel); overflow:hidden}
+  .trk-head{width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px;
+    background:none; border:0; color:var(--text); cursor:pointer; text-align:left; font:inherit}
+  .trk-head:hover{background:var(--panel-2)}
+  .trk-meta{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .trk-meta b{font-size:15px}
+  .trk-meta span{color:var(--muted); font-size:13px}
+  .trk-jump{flex:0 0 auto; font-size:11px; color:var(--accent); border:1px solid var(--accent);
+    border-radius:999px; padding:1px 8px; white-space:nowrap}
+  .trk-chev{flex:0 0 auto; color:var(--muted); transition:transform .18s ease; font-size:13px}
+  .trk-head.open .trk-chev{transform:rotate(90deg); color:var(--accent)}
+  .trk-head.open{border-bottom:1px solid var(--line)}
+  .trk-panel{padding:14px}
+  .trk-panel .embed{margin-bottom:12px}
+  .trk-panel .reviews{margin-top:0}
+
+  /* ---- Track cards ---- */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px 18px; margin:14px 0;}
+  .card .row{display:flex; align-items:baseline; gap:12px; margin-bottom:10px}
+  .num{flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+    background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
+  .meta{flex:1 1 auto; min-width:0}
+  .meta .artist{font-weight:700; font-size:16px}
+  .meta .track{color:var(--muted); font-size:13px}
+  .meta .alt{color:var(--muted); font-size:12px; font-style:italic; opacity:.8}
+  .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
+  .noembed{font-size:13px; color:var(--muted); background:var(--panel-2); border:1px dashed var(--line);
+    border-radius:8px; padding:10px 12px}
+  .embed.yt{height:230px}
+  .watch{margin-top:8px; font-size:13px}
+  .watch a{color:var(--accent); text-decoration:none}
+  .watch a:hover{text-decoration:underline}
+
+  .reviews{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:14px}
+  @media (max-width:680px){ .reviews{grid-template-columns:1fr} }
+  .rv-head{display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:13px; font-weight:700}
+  .rv-head.ging .who{color:var(--accent)} .rv-head.hs .who{color:var(--hs)}
+  .rv-head .dot{flex:0 0 auto}
+  .rv-points{margin:0; padding-left:18px; color:#cdd7ea; font-size:13.5px; line-height:1.55}
+  .rv-points li{margin:4px 0}
+  .footnote{text-align:center; color:var(--muted); font-size:12px; margin-top:34px}
+  .footnote a.admin-link{color:var(--muted); text-decoration:underline; cursor:pointer; opacity:.7}
+  .footnote a.admin-link:hover{opacity:1}
+
+  /* ---- Submissions panel ---- */
+  .submit{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px 22px; margin:26px 0 8px;
+    box-shadow:0 12px 44px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05)}
+  .submit-head{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+  .kick2{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent-2); font-weight:700}
+  .submit-count{margin-left:auto; font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:7px; white-space:nowrap}
+  .submit-intro{margin:0 0 16px; font-size:13.5px; color:var(--muted)}
+  .submit-intro b{color:#fff}
+  .soon-note{font-size:13px; color:var(--muted); font-style:italic; margin:0}
+  .submit.disabled{opacity:.72}
+
+  .fld{display:block; margin:0 0 12px}
+  .fld-lab{display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 5px}
+  #subForm select, #subForm input[type=text]{width:100%; padding:12px 13px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font:inherit; font-size:14px}
+  #subForm select:focus, #subForm input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(255,131,81,.18)}
+  .manual{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media (max-width:560px){ .manual{grid-template-columns:1fr} }
+
+  .dropzone{position:relative; border:1.5px dashed var(--line); border-radius:12px; background:var(--panel-2);
+    padding:22px 16px; text-align:center; cursor:pointer; transition:border-color .12s, background .12s; margin:4px 0}
+  .dropzone:hover{border-color:var(--accent)}
+  .dropzone.drag{border-color:var(--accent); background:rgba(255,131,81,.08)}
+  .dropzone.has-file{border-style:solid; border-color:var(--ok); background:rgba(95,211,166,.06); cursor:default}
+  .dropzone:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .dz-ico{font-size:26px; color:var(--accent); line-height:1}
+  .dz-main{font-size:15px; font-weight:700; margin-top:6px}
+  .dz-sub{font-size:12.5px; color:var(--muted); margin-top:3px}
+  .dz-sub u{cursor:pointer}
+  .dz-file{display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap}
+  .dz-fname{font-weight:700; font-size:14px; word-break:break-all}
+  .dz-fname::before{content:"\266A  "; color:var(--ok)}
+  .dz-clear{background:none; border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer}
+  .dz-clear:hover{border-color:var(--accent); color:var(--text)}
+  .dz-tip{font-size:11.5px; color:var(--muted); margin:7px 0 0; font-style:italic}
+
+  .sub-hint{font-size:12.5px; color:var(--accent-2); background:rgba(240,177,90,.08); border:1px solid rgba(240,177,90,.25);
+    border-radius:9px; padding:9px 12px; margin:10px 0 0}
+  .sub-hint b{color:#fff}
+  .prog{height:8px; background:var(--panel-2); border:1px solid var(--line); border-radius:999px; overflow:hidden; margin:14px 0 0}
+  .prog-bar{height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .15s}
+  .sub-btn{margin-top:14px; width:100%; background:linear-gradient(180deg,var(--accent),#2aa9e0); color:#04121a; border:0;
+    font-weight:800; padding:13px; border-radius:11px; cursor:pointer; font-size:15px; letter-spacing:.02em; transition:filter .12s, transform .06s}
+  .sub-btn:hover:not(:disabled){filter:brightness(1.06)}
+  .sub-btn:active:not(:disabled){transform:translateY(1px)}
+  .sub-btn:disabled{opacity:.45; cursor:not-allowed}
+  .sub-msg{margin-top:13px; padding:12px 14px; border-radius:10px; font-size:13.5px; line-height:1.5}
+  .sub-msg.ok{background:rgba(95,211,166,.10); border:1px solid rgba(95,211,166,.35); color:#bdeed8}
+  .sub-msg.err{background:rgba(255,93,115,.10); border:1px solid rgba(255,93,115,.35); color:#ffc2cc}
+  .sub-msg b{color:#fff}
+
+  /* ---- "Final submitted" indicator on track rows ---- */
+  .dot.ok{background:var(--ok); box-shadow:0 0 6px var(--ok)}
+  .trk-final{flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ok); font-weight:700; white-space:nowrap}
+
+  /* ---- Admin modal ---- */
+  #adminModal{position:fixed; inset:0; z-index:60; background:rgba(3,4,8,.86); display:none;
+    align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto}
+  #adminModal.show{display:flex}
+  .admin-box{position:relative; width:100%; max-width:720px; background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:24px; box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .admin-box h2{margin:0 0 4px; font-size:14px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent-2)}
+  .ax-sub{color:var(--muted); font-size:12.5px; margin:0 0 16px}
+  .ax-sub b{color:#fff}
+  #axKey{width:100%; padding:11px 12px; border-radius:9px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); font:inherit; font-size:13px}
+  .admin-row{display:flex; gap:10px; margin-bottom:14px}
+  .admin-row button{flex:0 0 auto; background:linear-gradient(180deg,var(--accent),#2aa9e0); color:#04121a; border:0; font-weight:700; padding:0 18px; border-radius:9px; cursor:pointer; font-size:14px}
+  .ax-item{border:1px solid var(--line); border-radius:11px; padding:12px 14px; margin:8px 0; background:var(--panel-2)}
+  .ax-top{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .ax-item b{font-size:14px}
+  .ax-meta{color:var(--muted); font-size:11.5px; margin-left:auto; white-space:nowrap}
+  .ax-dl{color:var(--accent); text-decoration:none; font-weight:700; font-size:12.5px; cursor:pointer}
+  .ax-dl:hover{text-decoration:underline}
+  .ax-old{margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-size:12px; color:var(--muted)}
+  .ax-old a{color:var(--accent); cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- ====== PASSWORD GATE ====== -->
+<div id="gate">
+  <div class="box">
+    <img class="glogo" src="assets/blue-dawn-logo.png" alt="Blue Dawn Records" />
+    <h1>Blue Dawn Records</h1>
+    <div class="gsub">Event Horizons</div>
+    <p>Feedback page is password protected.<br/>Enter the password from the Patreon post.</p>
+    <input id="gateInput" type="password" placeholder="Password" autocomplete="off" />
+    <div id="gateError"></div>
+    <button id="gateBtn">Enter</button>
+  </div>
+</div>
+
+<!-- ====== PAGE ====== -->
+<div class="wrap" id="page" style="display:none">
+  <header class="hero">
+    <img class="logo" src="assets/blue-dawn-logo.png" alt="Blue Dawn Records" />
+    <div class="kicker">Blue Dawn Records</div>
+    <h1 class="title">EVENT HORIZONS</h1>
+    <p class="subtitle">Livestream feedback</p>
+  </header>
+
+  <div class="intro">
+    <p>Our track-by-track feedback from the Event Horizons feedback livestreams. All three streams are done — the final voting runs on Patreon through the end of June.</p>
+    <div class="legend-row">
+      <span class="legend"><span class="dot ging"></span><b>Groovin in G</b></span>
+      <span class="legend"><span class="dot hs"></span><b>Human Synthetics</b></span>
+    </div>
+  </div>
+
+  <!-- ====== FINAL TRACK SUBMISSIONS ====== -->
+  <section id="submit" class="submit">
+    <div class="submit-head">
+      <div class="kick2">Submit your final track</div>
+      <div class="submit-count" id="subCount"></div>
+    </div>
+    <p class="submit-intro">Finished your track for the compilation? Drop the <b>.wav</b> straight in here — no emails, no WeTransfer. You can re-upload any time and we'll always use your <b>latest</b> version.</p>
+    <div id="subBody"></div>
+  </section>
+
+  <div id="content"></div>
+
+  <p class="footnote">Tracks are unreleased — please don't share this page or the password outside the patron group. <a class="admin-link" id="adminLink">admin</a></p>
+</div>
+
+<!-- ====== ADMIN MODAL ====== -->
+<div id="adminModal">
+  <div class="admin-box">
+    <button id="axClose" class="dz-clear" style="position:absolute; top:14px; right:14px">close</button>
+    <h2>Submissions — admin</h2>
+    <p class="ax-sub">Paste your Supabase <b>service_role</b> key to list and download every submitted track (latest version first). Only use this on your own machine — the key is never saved to the page.</p>
+    <div class="admin-row">
+      <input id="axKey" type="password" placeholder="service_role key" autocomplete="off" />
+      <button id="axGo">Load</button>
+    </div>
+    <div id="axList"></div>
+  </div>
+</div>
+
+<script>
+const PAGE_PASSWORD = "firstlight";
+const AUTHORS = { ging:"Groovin in G", hs:"Human Synthetics" };
+
+/* ============================================================
+   FEEDBACK DATA  (organised by livestream session)
+   - Each session has tracks; each track has reviews per author.
+   - author: "hs" (Human Synthetics) or "ging" (Groovin in G).
+   - placeholder:true = no SoundCloud embed yet (optional `link`).
+   - To add Session 3: push a new {n, label, tracks:[...]} object.
+   ============================================================ */
+const SESSIONS = [
+  {
+    n:1, label:"First feedback stream", youtube:"https://www.youtube.com/watch?v=ZnvxwT52C5s",
+    tracks:[
+      { artist:"Distant Lands", track:"Crystal Visions",
+        url:"https://soundcloud.com/user-30192001/crystal-visions", secret:"s-v1uZdnhciA5",
+        reviews:[
+          {author:"hs", points:["Vocal level and EQ","Drama pre-amen","'Horn' section stereo spread","Good balance of bass and breaks","Ear candy? 8 bar transitional bits n bobs"]},
+          {author:"ging", points:[
+            "Coors vocal, good suspense in the intro.",
+            "1:33 — very snappy metallic break, great contrast from the other elements, which are much warmer.",
+            "Tight drum layering, sub kick on the downbeat.",
+            "Filtersweeps were very cool with the amen, resonance pitch rolls upwards too, I liked how they became part of the groove.",
+            "3:15 — too many elements fighting for space, track got ducked out a bit. You can hear this a bit on the old tunes. Low mid energy is usually where the problems lie.",
+            "Nice break swapping tricks, changing the processing."]}
+        ]},
+      { artist:"RJ Macready", track:"Algebrast (WIP)", alt:"also: Equidistant from Mercy",
+        url:"https://soundcloud.com/jimmy-walsh-1/tune-ideas-drums-1", secret:"s-Q36GynBBNGD",
+        reviews:[
+          {author:"hs", points:["Maybe some more minimal sections like at the beginning?","Ending?"]},
+          {author:"ging", points:[
+            "Breaks were solid and rolling.",
+            "Liked the timbre of different elements.",
+            "1:44 — flip was very cool where it was stripped back.",
+            "2:39 — could have stripped the bass in the breakdown, more tension and release.",
+            "FX dope, rolls, interesting drums timbre.",
+            "The groove worked the best when it was stripped back."]}
+        ]},
+      { artist:"Future World Machines", track:"Polaris",
+        url:"https://soundcloud.com/patrickgroll/polaris-2026-04-21-1307",
+        reviews:[
+          {author:"hs", points:["Nice bass!","Switches","Spaaace","Break width","Maybe a second break?","Sample/texture"]},
+          {author:"ging", points:[
+            "Apache, hard break to make work, well done.",
+            "Great sound design on FX.",
+            "1:59 — maybe one more element.",
+            "Sits a little bit too long in the build stage of tension, could resolve in some way. A second hook, maybe a vocal to bring everything together.",
+            "Nice vibe with only a few elements, everything had purpose.",
+            "Uncertainty, unsettled, like it's not bad yet but it could very well be!",
+            "3:50 — liked the way the drums faded a bit."]}
+        ]},
+      { artist:"Fatal Strategy", track:"With Feeling",
+        url:"https://soundcloud.com/fatal-strategy/with-feeling",
+        reviews:[
+          {author:"hs", points:["Chords working","Nice chops","Bass","Vocal chops","More drum sound variation (something other than amen)"]},
+          {author:"ging", points:[
+            "Interesting processing on the chords.",
+            "Mix balance needs work between the drums, chords & bass.",
+            "Amen too choppy, needs the hat inbetween the kick/snare hits, try sending to a dotted 1/8D delay.",
+            "1:34 — wants to be pure rolling amen vibes.",
+            "More FX, transition elements.",
+            "Using the hi-hat as a tie to get the drums rolling a bit more."]}
+        ]},
+      { artist:"Drumatic", track:"Reckless",
+        url:"https://soundcloud.com/charlie-clarkson-berry/reckless",
+        reviews:[
+          {author:"hs", points:["DROP!","Interesting pad (major flavour), would love to hear more","More bass fx would be interesting, from same parts"]},
+          {author:"ging", points:[
+            "Nice one shot drums, snappy.",
+            "0:44 — good impact on drums.",
+            "1:08 — cool and minimal groove.",
+            "1:31 — very nice bass design.",
+            "Liked the perc hits at the end of the bars used as the fill elements.",
+            "Pad, vocals, drums and bass."]}
+        ]},
+      { artist:"Monsieur Bruit", track:"Footwork Lullaby",
+        url:"https://soundcloud.com/vinu-vinu-music/footwork-lullaby", secret:"s-EDiF6MpbF8Q",
+        reviews:[
+          {author:"hs", points:["Drop","Nice textures from outset","All came together really nicely pre-breakdown"]},
+          {author:"ging", points:[
+            "Like the break grooving behind the rhythm, cool vibes & sound selection.",
+            "1:26 to 1:56 — really nice section.",
+            "2:50 — cool to have a bit of emphasis on the drop. Whip backs, builds of drama & rising energy."]}
+        ]},
+      { artist:"Tsuki & Gureggu", track:"Into The Jungle", placeholder:true, note:"Awaiting an updated SoundCloud link.",
+        url:"https://soundcloud.com/j-b-295179176/tsuki-gureggu-into-the-jungle",
+        reviews:[
+          {author:"hs", points:["Nice sound selection","Like the mid bass with the 808","Nice break","Lovely pad and key sounds","Shuffle"]},
+          {author:"ging", points:[
+            "Very SD style FX.",
+            "My favourite kind of sound selection, every element flows into each other. Sounds play very well bouncing off each other.",
+            "Darkness vs drums vs bass.",
+            "Breakdown is wicked.",
+            "FX from my sample packs :)"]}
+        ]},
+      { artist:"KOSU", track:"Wish I Never Let Go",
+        url:"https://soundcloud.com/itskosu/wish-i-never-let-go", secret:"s-68C1rDLJbog",
+        reviews:[
+          {author:"hs", points:["Setting the scene","Intro","FX! Love the slightly atonal arp","Vocal","Good development","Vocal warping?","Pad chord lovely"]},
+          {author:"ging", points:[
+            "Very clean break swapping. Nice separation from the kick sample, the bass layer and drum breaks.",
+            "Progressional style arrangement, just keep building on the initial groove.",
+            "3:00 breakdown — get rid of the bass completely.",
+            "Like how minimal it becomes, sits in a nice space.",
+            "4:12 — could get rid of the rawww noise and replace it with something else. That's the response but you could have changed that a little as the tune went on."]}
+        ]},
+      { artist:"Indo (DougieC)", track:"Believe In Getting By",
+        url:"https://soundcloud.com/indo-dougiec/believe-in-getting-by",
+        reviews:[
+          {author:"hs", points:["Nice vocal","Great drum sound","Violin reverb/balance with vocal","Chorus?","Balance","Piano part variation, pad instead?"]},
+          {author:"ging", points:[
+            "Vocal working really well, tight sounding.",
+            "Violin making it work well in a DnB track is tough, good stuff.",
+            "Mixing, drums are super up front. Bass is too far back.",
+            "Bass impact could be a little more maybe? Try 2dB to begin with.",
+            "Vocal lead track, everything is backing it up really well."]}
+        ]},
+      { artist:"Amalgam", track:"Noble Woods", placeholder:true, note:"Awaiting an updated SoundCloud link.",
+        url:"https://soundcloud.com/amalgam_sound/noblewoods",
+        reviews:[
+          {author:"hs", points:["Lovely guitar part","Nice bass line","Great samples","Drums +1dB","Great rolling drums","Down to nothing"]},
+          {author:"ging", points:[
+            "Nice progression between the different sections, sounds cohesive but also has distinct parts.",
+            "Breakdown to the second drop was really cool, kept the energy up.",
+            "Second half of the track was really fun to listen to, kept reinventing the tune nicely."]}
+        ]}
+    ]
+  },
+
+  {
+    n:2, label:"Monday 1 June", youtube:"https://www.youtube.com/watch?v=FRm6xnq5QnE",
+    tracks:[
+      { artist:"B-Patrol", track:"Star Aligning", alt:"played as 'Stars'", placeholder:true,
+        note:"Sent via WeTransfer — no streaming link yet.",
+        reviews:[
+          {author:"hs", points:[
+            "Almost like two tunes in one, really like the second idea",
+            "Bass line working well for me",
+            "Really like the breaks",
+            "Great pad",
+            "Maybe some more melodic parts/samples/one-shots/fx",
+            "Really solid foundation"]},
+          {author:"ging", points:[
+            "Woodwind response, could be every other to space it out a bit more. Longer phrasing.",
+            "Breaks have a great tone, very clean chops.",
+            "Breaks had great layering.",
+            "Solid bass tone.",
+            "Drums + bass + vocal pad section sounded great.",
+            "Like the chord hits.",
+            "Source Direct, Secret Liaisons vibes.",
+            "Outro — lovely rolling vibes with the vocal."]}
+        ]},
+      { artist:"kapellich", track:"dolcefarniente", placeholder:true, note:"Awaiting an updated SoundCloud link.",
+        url:"https://soundcloud.com/kapellich/260526-dolcefarniente", secret:"s-VGPVAOg38gv",
+        reviews:[
+          {author:"hs", points:[
+            "Great intro",
+            "Great concept/vibe/arrangement",
+            "Good Alan Watts sample (texture/level maybe a bit loud)",
+            "Great melodics",
+            "Bass level could come up a touch",
+            "Nice breaks",
+            "Love the sparkly sounds",
+            "Maybe sax a little too loud",
+            "Great use of silence",
+            "Nice bongo dub out/vocal sample",
+            "Maybe bongos a little loud in his section?",
+            "Ending probs can cut"]},
+          {author:"ging", points:[
+            "Lovely intro.",
+            "Sparkly glissando are magic, pentatonic scale.",
+            "Has lots of the moments and textures like Artemis/Shogun.",
+            "Call and response between different samples and synths, everything is playing different motifs.",
+            "Bit more release on bass.",
+            "Percs a bit too loud, wrong swing? 4:52 — elements are really cool, the mix just needs a little work.",
+            "Really strong main chord progression.",
+            "8:12 — outro could just drop out."]}
+        ]},
+      { artist:"Amalgam", track:"Noble Woods", alt:"revisited from Session 1", placeholder:true, note:"Awaiting an updated SoundCloud link.",
+        url:"https://soundcloud.com/amalgam_sound/noblewoods",
+        reviews:[
+          {author:"hs", points:[
+            "Great intro, great space",
+            "Good fx on vocal",
+            "Cuts at the end of every 8/16",
+            "Lovely chords",
+            "Good breakdown",
+            "Great end for the comp"]},
+          {author:"ging", points:[
+            "Whip into the 1st drop a bit more.",
+            "Moves through the passages really nicely to keep the momentum.",
+            "FX at the end of the sections to make the transitions smoother.",
+            "Great sample selection — most cohesive version so far for sure.",
+            "Love the gated fx on the vocal."]}
+        ]},
+      { artist:"Indo (DougieC)", track:"Aeroplane Mode",
+        url:"https://soundcloud.com/indo-dougiec/aeroplane-mode",
+        reviews:[
+          {author:"hs", points:[
+            "Nice bass line",
+            "Good drums",
+            "Maybe pushed just a little too hard?",
+            "Good vocal sample",
+            "Reverb on bass and break",
+            "Effective arrangement",
+            "Subtle change in bassline for second drop",
+            "Like the hip hop lead, would be great with a bit more reverb or space"]},
+          {author:"ging", points:[
+            "Liked how full it sounded, maybe a little too distorted on the bass, loses power (have a clean sub layer).",
+            "Could have made a little bit more space for the other ingredients.",
+            "Lovely and simple, effective idea.",
+            "Liked the theme & progression with the synths.",
+            "Drums are smashed a little too much, you can hear the distortion."]}
+        ]},
+      { artist:"Drumatic", track:"Selectah",
+        url:"https://soundcloud.com/charlie-clarkson-berry/selectah-2",
+        reviews:[
+          {author:"hs", points:[
+            "Nice foundational drums and bass line",
+            "Nice chords, would be cool to hear some spatial fx on them e.g. reverb, delay",
+            "Good sample",
+            "Switch for the second drop"]},
+          {author:"ging", points:[
+            "Automation on the main synth — great way to bring up the energy.",
+            "Lovely minimal drop, rolling vibes.",
+            "Bass up in level 1/2 dB.",
+            "Loads of space to play with elements & FX.",
+            "1:31 — sick switch up with the bongos.",
+            "Great rise and fall towards the drops & breakdowns.",
+            "Club ready drops.",
+            "Solid bass tone.",
+            "Dub mixing delays (live record feedback, ms time, phasing, filtering etc on the delay tails)."]}
+        ]},
+      { artist:"STVP!D", track:"See Me",
+        url:"https://soundcloud.com/stvpid/stvpid-see-me", secret:"s-dHaXvrMEfNg",
+        reviews:[
+          {author:"hs", points:[
+            "Nice vibe",
+            "Maybe pushed a little too hard on the mastering",
+            "Cool chords!",
+            "Some cool arrangement fx",
+            "Take some of the parts out and add in automation"]},
+          {author:"ging", points:[
+            "Has good weight with the bass.",
+            "Could try filtering the pads down to make them a bit smoother & give more movement.",
+            "Side chain a bit obvious on the kick hit, makes it sound a bit choppy.",
+            "Kind of like a hip-hop breakbeat style, cool vibes.",
+            "Left/right pan and the break edits was really satisfying near the end, more of this please!",
+            "Good mix."]}
+        ]},
+      { artist:"lego island dj", track:"swimming pool",
+        url:"https://soundcloud.com/lego-island-dj/swimming-pool-4", secret:"s-wUZpteYg7oa",
+        reviews:[
+          {author:"hs", points:[
+            "Nice break chops (maybe some clicks?)",
+            "Interesting arrangement",
+            "Nice pad constant",
+            "Great dub style fx!",
+            "Good flow, interesting and switch-y but cohesive",
+            "Deconstructed jungle/breaks/idm — I like it!",
+            "Post-modern yet atmospheric",
+            "Like the very high frequency hi-hats"]},
+          {author:"ging", points:[
+            "0:14 — could have dropped in there, or had a shorter drum intro.",
+            "Great demonstration of drum technique, liked it with the softer break.",
+            "Good interplay between the different breaks.",
+            "Lots of great break tricks and techniques: whips, break swapping, low pitch.",
+            "3:40 — just the hat, and it was lovely.",
+            "Using silence, even briefly, would give the ear a nice rest from the fast paced drums.",
+            "A proper breakdown could help too.",
+            "Outro — smooth.",
+            "Nice dubby chords at the end, could have used these earlier."]}
+        ]},
+      { artist:"saluu", track:"forever",
+        url:"https://soundcloud.com/saluu-uk/forever", secret:"s-kR9ar29NMkD",
+        reviews:[
+          {author:"hs", points:[
+            "Love the break",
+            "Great bass chord progression",
+            "Nice atmospheres/autonomic vibes",
+            "Cool breakdown strings",
+            "Nice arrangement tricks later on e.g. dropping the kick"]},
+          {author:"ging", points:[
+            "Lovely texture in the pads + vocal layers.",
+            "1:09 — great drop and impact.",
+            "Some distorted bass layers could really land the idea.",
+            "Great vibes.",
+            "Nice switch up to the drums & bass section.",
+            "Feel the emotion from the strings — emotive.",
+            "Could have added a little kick back to the drums at the end of the bars, or a roll kick.",
+            "Needed maybe one more element with the stripped back sections, like a ride."]}
+        ]},
+      { artist:"Graish", track:"Syrup",
+        url:"https://soundcloud.com/graish/syrup",
+        reviews:[
+          {author:"hs", points:[
+            "Tearer!",
+            "Love the Apache",
+            "Nice call and response melodic parts",
+            "I think it's mastered pretty well!",
+            "Like the reso bass sound",
+            "Great break work, nice texture to the sound",
+            "Syrup sample?"]},
+          {author:"ging", points:[
+            "Excellent mix and drop tone. Had a great old school flavour.",
+            "Amen roller — loved the fills with the snares.",
+            "1:13 — acid flavour on the bass.",
+            "Apache was dope.",
+            "I like the way you reworked the original idea into the different sections.",
+            "Really clean production to lead into the drops, little rolls or fills.",
+            "Little bits of progression in the second half of the tune."]}
+        ]},
+      { artist:"AxWax", track:"Rah Magic", placeholder:true,
+        link:"https://faircamp.axwax.eu/axwax-rah-magic/", note:"On Faircamp (not SoundCloud) — listen via the link.",
+        reviews:[
+          {author:"hs", points:[
+            "Interesting breaks spatial effects",
+            "Like the arrangement and progression",
+            "Cool bass line, working well with drums",
+            "Like the percussion coming in, really effective",
+            "Nice break chops",
+            "Cool effective sections",
+            "Break down",
+            "Cool artistic imprint — sounds like AxWax!"]},
+          {author:"ging", points:[
+            "I like hearing all the raw breaks and FX.",
+            "It felt like it wanted a bass swap to a more sustained bass.",
+            "Hitting the root note a bit more with a new bass section.",
+            "Organ is a bit too contrasted to the rest of the track.",
+            "Break swapping was dope!",
+            "Swap the bass when the organ came in, sustain/build bass for those sections.",
+            "Sounded cool at the end when everything came together. Track had a lovely destination."]}
+        ]}
+    ]
+  },
+
+  {
+    n:3, label:"Monday 8 June", youtube:"https://www.youtube.com/watch?v=6hMqPdSq-nM",
+    tracks:[
+      { artist:"AquaRelle", track:"Lumos",
+        url:"https://soundcloud.com/tsuki-gurregu/lumos",
+        reviews:[
+          {author:"ging", points:[
+            "Lovely piano intro, quite Lensman-esque.",
+            "Great layers with the pads & vocals.",
+            "3:31 — lovely drop into the new space, really solid groove.",
+            "Spacey FX — planes, spiral FX, pitch-drop FX.",
+            "Love the sound selection & design.",
+            "3:04 — the transition between the different sections was a bit abrupt.",
+            "Solid mix too.",
+            "I like the build between the different sections, they each sit in a slightly different space.",
+            "Just an excellent track all round."]},
+          {author:"hs", points:[
+            "Interesting jazzy vocal intro",
+            "Like the jazzy skippy drums",
+            "Nice drums!",
+            "Nice bass line, love the jazziness",
+            "Nice mix",
+            "Nice melodic parts",
+            "Like the development as we move through the track"]}
+        ]},
+      { artist:"Newtype", track:"Sector 9",
+        url:"https://soundcloud.com/newtype-uc/section-9-v3", secret:"s-iY2y6R4qVLl",
+        reviews:[
+          {author:"ging", points:[
+            "Sound design on the bass is fantastic, cool effect the way the sound dies.",
+            "Mid-bass layers are so satisfying.",
+            "FX into the first drop, super original.",
+            "Mix is clean, has a lot of impact.",
+            "Clever use of silence before the second drop.",
+            "Nice progression throughout the second half — kept it fresh.",
+            "A vocal sample could take it to the next level."]},
+          {author:"hs", points:[
+            "Love the drop!",
+            "Groovy!!",
+            "Could see this tearing up a club",
+            "I expect Newtype will add more transition sections",
+            "Maybe a vocal sample, or spoken word could be cool?",
+            "Nice drum edits, especially toward the end"]}
+        ]},
+      { artist:"Anonym", track:"Shuffle & Cut", placeholder:true, note:"Awaiting an updated SoundCloud link.",
+        reviews:[
+          {author:"ging", points:[
+            "Parallel chords sounding cool.",
+            "Drums a little too far back in the mix at the beginning — sound better when layered.",
+            "Filter sweeps are very effective.",
+            "1:33 — great fill section.",
+            "Has a great classic jungle sound.",
+            "Nice use of FX to build to the second drop.",
+            "Second drop — mix needs a bit of work. A Reece bass would work really well here, wants more solid low-end weight.",
+            "Arp is a great element, really satisfying."]},
+          {author:"hs", points:[
+            "Maybe save the bass line for after the drums have come in",
+            "Nice vibe and atmosphere",
+            "Breaks sounding cool and choppy, love the edits",
+            "Cool arp sound!",
+            "Pad might be a bit dense in the middle, could benefit from a little movement",
+            "Maybe a rhythmic element to carry us into the breakdown",
+            "Maybe bass too low in the second drop?",
+            "Break maybe pushed too much in the second drop",
+            "Over-emphasis on the midrange — maybe a mastering thing, or on the individual elements?",
+            "I like the fractured sound of the breaks",
+            "The elements all work nicely together"]}
+        ]},
+      { artist:"tdel", track:"E39",
+        url:"https://soundcloud.com/tdel/tdel-e39", secret:"s-TxilPkYOH3t",
+        reviews:[
+          {author:"ging", points:[
+            "Instantly a classic sound — the water vibes & FX.",
+            "Atmospheric texture is lovely.",
+            "Vocal works perfectly with the tune.",
+            "Drums have a great tone, work well with the samples in the track.",
+            "Solid mix and a progressive style of bringing in elements, evolving throughout the track.",
+            "4:25 — great break swap, drums here work so well.",
+            "I like the melody a lot. Could happen half as much — space out the phrasing a bit more.",
+            "Outro could fade more at the pads, stripped-back section is cool."]},
+          {author:"hs", points:[
+            "LOVELY intro",
+            "Love the drum effects for the intro",
+            "Sick drum edits",
+            "Maybe cut the bass before the drums enter?",
+            "Maybe cut the bass for the filtered-down drums section around 4:21?",
+            "Shoe-gazey, psych vibes",
+            "Tasteful arrangement",
+            "Like the drums-only section — maybe bring that forward for more variation?"]}
+        ]},
+      { artist:"PR0T0TYPE", track:"Classic L's",
+        url:"https://soundcloud.com/prototype0/cls", secret:"s-eHBQwbEI7qb",
+        reviews:[
+          {author:"ging", points:[
+            "Cool Aphex Twin style intro.",
+            "Art is about expression — who you are and what you're feeling. Cool to let that out even if it doesn't fall within the boundaries of what people typically expect from a track.",
+            "2:00 — love this track.",
+            "2:55 — breakdown is super cool. Love this! Really stellar section and a highlight of the track for me. Could this idea be expanded more? :)",
+            "Some really harmonious sections which are super lovely.",
+            "Sounds like a video game where you move into different sections of the game."]},
+          {author:"hs", points:[
+            "First section kind of Aphex IDM vibes",
+            "Second section, almost could be an ending",
+            "Third section kind of hyperpop vibes",
+            "Melodic sensibility",
+            "Fourth section could be after the first as a heavy transition",
+            "Squarepusher vibes",
+            "Some absolutely beautiful moments",
+            "Feels like it's many songs in one",
+            "Middle section could deffo be its own tune, around 3:30",
+            "Enough ideas for a whole album!",
+            "Drukqs / Shobaleader One vibes toward the end"]}
+        ]},
+      { artist:"Williams Mix", track:"Ambi",
+        url:"https://soundcloud.com/illontgomerie/ambi-wav", secret:"s-wLDCybfej1i",
+        reviews:[
+          {author:"ging", points:[
+            "Nice classic jungle texture & FX.",
+            "Great drum groove, nice and fresh.",
+            "Drums are slamming quite a lot — definitely adds to that old-school sound but maybe a bit too much.",
+            "2:37 — a little abrupt, could have a wave crash to help with the transition to the breakdown here.",
+            "Stripped drums sounding really good though.",
+            "Second half really sells the idea, great stuff.",
+            "5:10 — enjoyed the stripped-back section."]},
+          {author:"hs", points:[
+            "Nice airy vibe",
+            "Lovely parts, conceptually",
+            "Bass could come up in volume",
+            "Bass pitch could potentially be too low?",
+            "Nice idea for the switch, could maybe just move it forward to 3:25",
+            "3:25 — really like this section harmonically!",
+            "Like the plastic break sample"]}
+        ]},
+      { artist:"RAVEDEATH1993", track:"Waiting for the Storm",
+        url:"https://soundcloud.com/ravedeath1993/waiting-for-the-storm", secret:"s-o1Lj6j5AOUW",
+        reviews:[
+          {author:"ging", points:[
+            "Very Paradox-esque, hard drum sound.",
+            "Good weight on the kick.",
+            "Love the break swapping.",
+            "I kinda want that break-swap sound to carry on a bit more.",
+            "2:15 — dope.",
+            "3:11 — yes, sick! Hard break sound.",
+            "Outro — could rework this a little to evolve from the original idea."]},
+          {author:"hs", points:[
+            "Great flute sample for the intro",
+            "Drum break could've been pushed a little too hard, but love the choice of break and sound",
+            "Great bass line",
+            "Some great break switching!",
+            "Paradox vibes",
+            "Great vocal sample! Could definitely feature in the intro",
+            "Nice stop FX around 2:30, would love to hear more stuff like that",
+            "Conceptually great ideas, love the switch-up",
+            "Great sample choices",
+            "Love the distortion, but could maybe be dialled back just a little",
+            "Nice foghorn — maybe just happening the once at the beginning of the bar"]}
+        ]},
+      { artist:"Trident", track:"Mysteries",
+        url:"https://soundcloud.com/trident-uk/mysteries", secret:"s-UWewWB3eML3",
+        reviews:[
+          {author:"ging", points:[
+            "Great intro build, interesting space.",
+            "Nice mix & fullness to the drop, drums grooving well.",
+            "Bongo / extra break working well to accentuate the groove.",
+            "2:02 — working well stripped back.",
+            "Bass is a bit far back in the mix.",
+            "Sample selection really solid.",
+            "Love it when it strips back the elements a bit more.",
+            "Amen is quite punchy — when it layers with the bongo the transient cuts through really hard. Maybe HP-filter the bongos here, or pan them.",
+            "Smoothly moved between each section.",
+            "A vocal could really sell the idea."]},
+          {author:"hs", points:[
+            "Nice intro",
+            "Vangelis / Giorgio Moroder",
+            "Nice chord progression",
+            "Good break choices",
+            "Cool melodic progression with arpeggiated bell sounds around 2:30",
+            "Filter sweep in on the drums — could be cool combined with volume automation for more seamlessness",
+            "Transition sections with stops and starts are really cool, could maybe be tightened up a touch as some delays hang over",
+            "Love the main chord progression with Rhodes flourishes",
+            "Would love to hear that Rhodes flourish louder in the mix"]}
+        ]}
+    ]
+  }
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function embedSrc(t){
+  let u = t.url;
+  if (t.secret) u += "?secret_token=" + t.secret;
+  return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(u) +
+    "&color=%23ff8351&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false";
+}
+
+function reviewBlock(rv){
+  const who = AUTHORS[rv.author] || rv.author;
+  const pts = rv.points.map(p=>`<li>${esc(p)}</li>`).join("");
+  return `<div class="review">
+    <div class="rv-head ${rv.author}"><span class="dot ${rv.author}"></span><span class="who">${esc(who)}</span></div>
+    <ul class="rv-points">${pts}</ul>
+  </div>`;
+}
+
+function trackCard(t, n){
+  const alt = t.alt ? `<div class="alt">${esc(t.alt)}</div>` : "";
+  let player;
+  if (!t.placeholder){
+    player = `<iframe class="embed" loading="lazy" scrolling="no" frameborder="no" allow="autoplay" src="${embedSrc(t)}"></iframe>`;
+  } else if (t.ytId){
+    player = `<iframe class="embed yt" loading="lazy" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen src="https://www.youtube.com/embed/${t.ytId}?start=${t.ytStart||0}"></iframe>`;
+  } else {
+    const link = t.link ? ` <a href="${t.link}" target="_blank" rel="noopener">Open link →</a>` : "";
+    player = `<div class="noembed">⏳ ${esc(t.note || "No stream link yet.")}${link}</div>`;
+  }
+  const watch = t.ytId
+    ? `<div class="watch"><a href="https://youtu.be/${t.ytId}?t=${t.ytStart||0}" target="_blank" rel="noopener">▶ Watch this feedback on the livestream</a></div>`
+    : "";
+  return `<div class="card">
+    <div class="row">
+      <div class="num">${n}</div>
+      <div class="meta">
+        <div class="artist">${esc(t.artist)}</div>
+        <div class="track">${esc(t.track)}</div>
+        ${alt}
+      </div>
+    </div>
+    ${player}
+    ${watch}
+    <div class="reviews">${t.reviews.map(reviewBlock).join("")}</div>
+  </div>`;
+}
+
+/* ---- YouTube IFrame API: one controllable player per session ---- */
+let ytApiReady = false;
+const ytPlayers = {};
+window.onYouTubeIframeAPIReady = function(){ ytApiReady = true; buildPlayers(); };
+(function loadYT(){ const s=document.createElement("script"); s.src="https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
+
+function videoId(url){ const m = String(url).match(/[?&]v=([^&]+)/); return m ? m[1] : ""; }
+
+function buildPlayers(){
+  if(!ytApiReady || !window.YT || !YT.Player) return;
+  SESSIONS.forEach(s=>{
+    if(!s.youtube) return;
+    const id = "ytplayer-" + s.n;
+    if(ytPlayers[s.n] || !document.getElementById(id)) return;
+    ytPlayers[s.n] = new YT.Player(id, { videoId: videoId(s.youtube), playerVars:{ rel:0, modestbranding:1, origin: location.origin } });
+  });
+}
+
+function jumpTo(session, seconds){
+  const p = ytPlayers[session];
+  if(p && typeof p.seekTo === "function"){
+    p.seekTo(seconds, true);
+    p.playVideo();
+    const w = document.getElementById("ytplayer-"+session);
+    if(w) w.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+}
+
+// Start times (seconds) per session, in track order. Pulled from the VOD auto-captions 2026-06-02.
+const STARTS = {
+  1: [592, 1617, 2249, 3089, 4260, 4764, 5433, 6007, 6745, 7396],
+  2: [343, 1281, 2380, 3092, 3758, 4448, 4853, 6157, 6680, 7229],
+  3: [720, 1242, 1890, 2565, 3408, 4214, 5000, 5636]
+};
+
+function trackRow(t, s, i, start){
+  const hasStart = (typeof start === "number");
+  const jumpHint = hasStart ? `<span class="trk-jump">▶ jump video</span>` : "";
+  let media = "";
+  if(!t.placeholder){
+    media = `<iframe class="embed lazy" data-src="${embedSrc(t)}" loading="lazy" scrolling="no" frameborder="no" allow="autoplay"></iframe>`;
+  } else if(t.link){
+    media = `<div class="noembed">⏳ ${esc(t.note||"")} <a href="${t.link}" target="_blank" rel="noopener">Open link →</a></div>`;
+  } else {
+    media = `<div class="noembed">⏳ ${esc(t.note||"No stream link yet.")}</div>`;
+  }
+  const reviews = `<div class="reviews">${t.reviews.map(reviewBlock).join("")}</div>`;
+  return `<div class="trk">
+    <button class="trk-head" data-session="${s.n}" data-key="${trackKey(t.artist,t.track)}"${hasStart?` data-start="${start}"`:""}>
+      <span class="num">${i+1}</span>
+      <span class="trk-meta"><b>${esc(t.artist)}</b> <span>${esc(t.track)}</span></span>
+      <span class="trk-final" hidden></span>
+      ${jumpHint}
+      <span class="trk-chev">▸</span>
+    </button>
+    <div class="trk-panel" hidden>${media}${reviews}</div>
+  </div>`;
+}
+
+function render(){
+  const el = document.getElementById("content");
+  el.innerHTML = SESSIONS.map(s=>{
+    const watch = s.youtube ? `<a class="sesh-link" href="${s.youtube}" target="_blank" rel="noopener">▶ Open on YouTube</a>` : "";
+    const head = `<div class="sesh">Session ${s.n} <span>— ${esc(s.label)}</span>${watch}</div>`;
+    const player = s.youtube ? `<div class="ytwrap"><div id="ytplayer-${s.n}"></div></div>` : "";
+    const rows = s.tracks.map((t,i)=>trackRow(t, s, i, (STARTS[s.n]||[])[i])).join("");
+    return head + player + `<div class="trklist">${rows}</div>`;
+  }).join("");
+  buildPlayers();
+}
+
+/* accordion + jump (event delegation) */
+document.getElementById("content").addEventListener("click", function(e){
+  const head = e.target.closest(".trk-head");
+  if(!head) return;
+  const panel = head.nextElementSibling;
+  if(!panel.hasAttribute("hidden")){          // already open → close it
+    panel.setAttribute("hidden","");
+    head.classList.remove("open");
+    return;
+  }
+  // single-open accordion: close any other open track first
+  document.querySelectorAll("#content .trk-panel:not([hidden])").forEach(p=>{
+    p.setAttribute("hidden","");
+    p.previousElementSibling.classList.remove("open");
+  });
+  panel.removeAttribute("hidden");
+  head.classList.add("open");
+  const f = panel.querySelector("iframe.lazy");
+  if(f && !f.src){ f.src = f.dataset.src; }
+  if(head.dataset.start !== undefined) jumpTo(parseInt(head.dataset.session,10), parseInt(head.dataset.start,10));
+});
+
+/* ============================================================
+   FINAL TRACK SUBMISSIONS  (Supabase: private Storage + Postgres)
+   ── Paste your two Supabase values below to switch uploads on.
+   ── Full 5-minute backend setup lives in supabase-setup.md.
+   ── Left blank, the panel shows a friendly "opening soon" note
+      and the rest of the page is unaffected.
+   ============================================================ */
+const SUPABASE_URL      = "https://gcgsqhgydoojrgkliiwn.supabase.co";   // no trailing slash
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjZ3NxaGd5ZG9vanJna2xpaXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1Mzk1ODUsImV4cCI6MjA5NzExNTU4NX0.6ecU6Ehz0vEA3ggKJYZjGQHasEJzXAUQiwSF1UBofDk";   // the public "anon" key (safe to ship)
+const SUB_BUCKET = "submissions";
+const SUB_MAX_MB = 200;
+const SUB_ACCEPT = ["wav","aif","aiff","flac","mp3"];
+function subEnabled(){ return !!(SUPABASE_URL && SUPABASE_ANON_KEY); }
+
+function slugify(s){ return String(s).toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"") || "x"; }
+function trackKey(artist, track){ return slugify(artist) + "__" + slugify(track); }
+function escAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
+
+/* unique (artist, track) pairs pulled straight from the feedback data */
+function allStreamTracks(){
+  const seen={}, out=[];
+  SESSIONS.forEach(s=> s.tracks.forEach(t=>{
+    const k = trackKey(t.artist, t.track);
+    if(seen[k]) return; seen[k]=1;
+    out.push({ key:k, artist:t.artist, track:t.track });
+  }));
+  out.sort((a,b)=> a.artist.localeCompare(b.artist) || a.track.localeCompare(b.track));
+  return out;
+}
+
+/* ---- Supabase REST helpers (no SDK — pure fetch) ---- */
+function sbHeaders(key){ return { apikey:key, Authorization:"Bearer "+key, "Content-Type":"application/json" }; }
+async function sbRpc(name, args, key){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, { method:"POST", headers:sbHeaders(key||SUPABASE_ANON_KEY), body:JSON.stringify(args||{}) });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+function sbUpload(path, file, onProgress){
+  return new Promise((resolve, reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/${SUB_BUCKET}/${encodeURI(path)}`);
+    xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+    xhr.setRequestHeader("Authorization", "Bearer "+SUPABASE_ANON_KEY);
+    xhr.setRequestHeader("x-upsert", "false");
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.upload.onprogress = e=>{ if(e.lengthComputable && onProgress) onProgress(e.loaded/e.total); };
+    xhr.onload = ()=> (xhr.status>=200 && xhr.status<300) ? resolve() : reject(uploadError(xhr));
+    xhr.onerror = ()=> reject(new Error("Network error during upload."));
+    xhr.send(file);
+  });
+}
+function uploadError(xhr){
+  if(xhr.status===413 || /exceeded|too large|maximum/i.test(xhr.responseText||""))
+    return new Error("That file is over the storage size limit. Try exporting a FLAC (lossless, ~40% smaller) — or ask Greg to raise the limit.");
+  return new Error("Upload failed ("+xhr.status+"). "+(xhr.responseText||""));
+}
+
+/* ---- "who's submitted" state + indicators ---- */
+let SUBMITTED = {};   // artist_key -> { artist_key, artist, track, versions, last_at }
+async function loadSubmitted(){
+  if(!subEnabled()) return;
+  try{
+    const rows = await sbRpc("submitted_summary", {});
+    SUBMITTED = {};
+    (rows||[]).forEach(r=> SUBMITTED[r.artist_key]=r);
+    paintIndicators();
+    updateSubCount();
+    if(document.getElementById("subForm")) wireSubFormHint();
+  }catch(e){ console.warn("[submissions] summary failed:", e.message); }
+}
+function paintIndicators(){
+  document.querySelectorAll('#content .trk-head[data-key]').forEach(h=>{
+    const info = SUBMITTED[h.dataset.key];
+    const el = h.querySelector('.trk-final');
+    if(!el) return;
+    if(info){ el.hidden=false; el.innerHTML = `<span class="dot ok"></span>final · v${info.versions}`; }
+    else { el.hidden=true; el.innerHTML=""; }
+  });
+}
+function updateSubCount(){
+  const el = document.getElementById('subCount'); if(!el) return;
+  const keys = allStreamTracks().map(t=>t.key);
+  const done = keys.filter(k=> SUBMITTED[k]).length;
+  el.innerHTML = `<span class="dot ok"></span>${done} of ${keys.length} final tracks in`;
+}
+
+/* ---- build + wire the upload form ---- */
+function initSubmissions(){
+  const body = document.getElementById('subBody');
+  if(!body) return;
+  if(!subEnabled()){
+    document.getElementById('submit').classList.add('disabled');
+    body.innerHTML = `<p class="soon-note">⏳ Uploads are switching on shortly. For now, send your final track the usual way and we'll add it.</p>`;
+    return;
+  }
+  const tracks = allStreamTracks();
+  body.innerHTML = `
+    <form id="subForm" autocomplete="off">
+      <label class="fld">
+        <span class="fld-lab">Your track</span>
+        <select id="subTrack" required>
+          <option value="" disabled selected>Select your track…</option>
+          ${tracks.map(t=>`<option value="${t.key}" data-artist="${escAttr(t.artist)}" data-track="${escAttr(t.track)}">${esc(t.artist)} — ${esc(t.track)}</option>`).join("")}
+          <option value="__manual">➕ My track isn't listed…</option>
+        </select>
+      </label>
+      <div id="manualWrap" class="manual" hidden>
+        <label class="fld"><span class="fld-lab">Artist name</span><input id="subArtist" type="text" placeholder="e.g. Distant Lands" /></label>
+        <label class="fld"><span class="fld-lab">Track title</span><input id="subTitle" type="text" placeholder="e.g. Crystal Visions" /></label>
+      </div>
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload your track">
+        <input id="fileInput" type="file" accept=".wav,.aif,.aiff,.flac,.mp3,audio/*" hidden />
+        <div class="dz-idle">
+          <div class="dz-ico">⤓</div>
+          <div class="dz-main">Drag &amp; drop your track here</div>
+          <div class="dz-sub">or <u>click to browse</u> · WAV / AIFF / FLAC / MP3 · up to ${SUB_MAX_MB} MB</div>
+        </div>
+        <div class="dz-file" hidden>
+          <div class="dz-fname" id="dzName"></div>
+          <button type="button" class="dz-clear" id="dzClear">change file</button>
+        </div>
+      </div>
+      <p class="dz-tip">Tip: if your WAV is too big to upload, export a FLAC — it's lossless and roughly 40% smaller.</p>
+      <div id="subHint" class="sub-hint" hidden></div>
+      <div class="prog" id="prog" hidden><div class="prog-bar" id="progBar"></div></div>
+      <button type="submit" id="subBtn" class="sub-btn" disabled>Submit final track</button>
+      <div id="subMsg" class="sub-msg" hidden></div>
+    </form>`;
+  wireSubForm();
+}
+
+let _subState = { file:null };
+function subCurrent(){
+  const sel=document.getElementById('subTrack'); if(!sel) return null;
+  if(sel.value==='__manual'){
+    const a=(document.getElementById('subArtist').value||'').trim();
+    const t=(document.getElementById('subTitle').value||'').trim();
+    if(!a||!t) return null;
+    return { key:trackKey(a,t), artist:a, track:t, isListed:false };
+  }
+  const opt=sel.selectedOptions[0];
+  if(!opt || !opt.value) return null;
+  return { key:opt.value, artist:opt.dataset.artist, track:opt.dataset.track, isListed:true };
+}
+function wireSubFormHint(){
+  const c=subCurrent(), hint=document.getElementById('subHint'), btn=document.getElementById('subBtn');
+  if(!hint) return;
+  if(c && SUBMITTED[c.key]){
+    const v=SUBMITTED[c.key].versions;
+    hint.hidden=false;
+    hint.innerHTML=`↻ A version of <b>${esc(c.track)}</b> is already in (v${v}). Uploading will make it <b>v${v+1}</b> — the new latest the team hears.`;
+  } else hint.hidden=true;
+  if(btn){
+    btn.disabled = !(c && _subState.file);
+    btn.textContent = (c && SUBMITTED[c.key]) ? 'Upload new version' : 'Submit final track';
+  }
+}
+function wireSubForm(){
+  const sel=document.getElementById('subTrack');
+  const manualWrap=document.getElementById('manualWrap');
+  const subArtist=document.getElementById('subArtist');
+  const subTitle=document.getElementById('subTitle');
+  const dz=document.getElementById('dropzone');
+  const fileInput=document.getElementById('fileInput');
+  const dzIdle=dz.querySelector('.dz-idle');
+  const dzFile=dz.querySelector('.dz-file');
+  const dzName=document.getElementById('dzName');
+  const dzClear=document.getElementById('dzClear');
+  const btn=document.getElementById('subBtn');
+  const msg=document.getElementById('subMsg');
+  const prog=document.getElementById('prog');
+  const progBar=document.getElementById('progBar');
+  const form=document.getElementById('subForm');
+  _subState.file=null;
+
+  sel.addEventListener('change', ()=>{ manualWrap.hidden = sel.value!=='__manual'; wireSubFormHint(); });
+  if(subArtist) subArtist.addEventListener('input', wireSubFormHint);
+  if(subTitle)  subTitle.addEventListener('input', wireSubFormHint);
+
+  function setFile(f){
+    if(!f) return;
+    const ext=(f.name.split('.').pop()||'').toLowerCase();
+    if(SUB_ACCEPT.indexOf(ext)<0){ flash(msg,'err',`That's a .${esc(ext)} file — please upload one of: ${SUB_ACCEPT.join(', ')}.`); return; }
+    if(f.size > SUB_MAX_MB*1024*1024){ flash(msg,'err',`That file is ${(f.size/1048576).toFixed(0)} MB — the limit is ${SUB_MAX_MB} MB. Try a FLAC export.`); return; }
+    _subState.file=f;
+    dzIdle.hidden=true; dzFile.hidden=false; dz.classList.add('has-file');
+    dzName.textContent=`${f.name} · ${(f.size/1048576).toFixed(1)} MB`;
+    msg.hidden=true; wireSubFormHint();
+  }
+  function clearFile(){ _subState.file=null; fileInput.value=''; dzIdle.hidden=false; dzFile.hidden=true; dz.classList.remove('has-file'); wireSubFormHint(); }
+
+  dz.addEventListener('click', e=>{ if(e.target===dzClear) return; if(!_subState.file) fileInput.click(); });
+  dz.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && !_subState.file){ e.preventDefault(); fileInput.click(); } });
+  fileInput.addEventListener('change', ()=> setFile(fileInput.files[0]));
+  dzClear.addEventListener('click', clearFile);
+  ['dragenter','dragover'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.add('drag'); }));
+  dz.addEventListener('dragleave', e=>{ if(!dz.contains(e.relatedTarget)) dz.classList.remove('drag'); });
+  dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); const f=e.dataTransfer.files && e.dataTransfer.files[0]; if(f) setFile(f); });
+
+  form.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const c=subCurrent(); if(!c || !_subState.file) return;
+    const file=_subState.file;
+    btn.disabled=true; btn.textContent='Uploading…'; msg.hidden=true; prog.hidden=false; progBar.style.width='0%';
+    const ext=(file.name.split('.').pop()||'dat').toLowerCase();
+    const path=`${c.key}/${crypto.randomUUID()}.${ext}`;
+    try{
+      await sbUpload(path, file, p=> progBar.style.width=Math.round(p*100)+'%');
+      const res=await sbRpc('record_submission', {
+        p_artist_key:c.key, p_artist:c.artist, p_track:c.track, p_is_listed:c.isListed,
+        p_file_path:path, p_file_name:file.name, p_file_size:file.size, p_note:null
+      });
+      const row=Array.isArray(res)?res[0]:res;
+      const v=row?row.version:1, upd=row?row.is_update:false;
+      prog.hidden=true;
+      flash(msg,'ok', upd
+        ? `✅ Updated! <b>${esc(c.track)}</b> is now <b>version ${v}</b> — that's the one the team will use. Thanks ${esc(c.artist)}!`
+        : `✅ Got it — <b>${esc(c.track)}</b> is in. Thanks ${esc(c.artist)}! You can re-upload any time and we'll always take your latest.`);
+      clearFile(); sel.selectedIndex=0; manualWrap.hidden=true;
+      if(subArtist) subArtist.value=''; if(subTitle) subTitle.value='';
+      await loadSubmitted();
+    }catch(err){
+      prog.hidden=true;
+      flash(msg,'err', `Upload didn't go through: ${esc(err.message||String(err))} You can also send it over the usual way.`);
+    }finally{
+      btn.disabled=false; wireSubFormHint();
+    }
+  });
+  wireSubFormHint();
+}
+function flash(el, kind, html){ if(!el) return; el.className='sub-msg '+kind; el.innerHTML=html; el.hidden=false; }
+
+/* ============================================================
+   ADMIN  ── list + download every submission.
+   Needs the Supabase service_role key, typed at runtime
+   (never stored in the page). Use on your own machine only.
+   ============================================================ */
+function initAdmin(){
+  const modal=document.getElementById('adminModal');
+  const link=document.getElementById('adminLink');
+  if(!modal || !link) return;
+  link.addEventListener('click', e=>{ e.preventDefault(); modal.classList.add('show'); });
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('show'); });
+  document.getElementById('axClose').addEventListener('click', ()=> modal.classList.remove('show'));
+  document.getElementById('axGo').addEventListener('click', loadAdmin);
+  document.getElementById('axKey').addEventListener('keydown', e=>{ if(e.key==='Enter') loadAdmin(); });
+}
+async function adminSignedUrl(path, fileName, srk){
+  const r=await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${SUB_BUCKET}/${encodeURI(path)}`, {
+    method:'POST', headers:sbHeaders(srk), body:JSON.stringify({ expiresIn:3600 })
+  });
+  if(!r.ok) throw new Error(await r.text());
+  const j=await r.json();
+  return `${SUPABASE_URL}/storage/v1${j.signedURL}&download=${encodeURIComponent(fileName||'track')}`;
+}
+async function loadAdmin(){
+  const out=document.getElementById('axList');
+  const srk=document.getElementById('axKey').value.trim();
+  if(!subEnabled()){ out.innerHTML='<p class="ax-sub">Add your Supabase URL + keys to the page first.</p>'; return; }
+  if(!srk){ out.innerHTML='<p class="ax-sub">Paste your service_role key first.</p>'; return; }
+  out.innerHTML='<p class="ax-sub">Loading…</p>';
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/submissions?select=*&order=artist_key.asc,version.desc`, { headers:sbHeaders(srk) });
+    if(!r.ok) throw new Error(await r.text());
+    const rows=await r.json();
+    if(!rows.length){ out.innerHTML='<p class="ax-sub">No submissions yet.</p>'; return; }
+    const groups={};
+    rows.forEach(x=>{ (groups[x.artist_key]=groups[x.artist_key]||[]).push(x); });
+    const keys=Object.keys(groups).sort();
+    out.innerHTML = `<p class="ax-sub">${keys.length} track(s) · ${rows.length} upload(s) total.</p>` + keys.map(k=>{
+      const list=groups[k], latest=list[0], older=list.slice(1);
+      const olderHtml = older.length ? `<div class="ax-old">Earlier: ${older.map(o=>`<a data-path="${escAttr(o.file_path)}" data-name="${escAttr(o.file_name)}">v${o.version}</a>`).join(' · ')}</div>` : '';
+      return `<div class="ax-item">
+        <div class="ax-top">
+          <b>${esc(latest.artist)}</b> — ${esc(latest.track)}
+          <span class="ax-meta">v${latest.version} · ${(latest.file_size/1048576).toFixed(1)} MB · ${esc(new Date(latest.created_at).toLocaleString())}${latest.is_listed?'':' · manual'}</span>
+        </div>
+        <div style="margin-top:6px"><a class="ax-dl" data-path="${escAttr(latest.file_path)}" data-name="${escAttr(latest.file_name)}">⤓ Download latest (${esc(latest.file_name)})</a></div>
+        ${olderHtml}
+      </div>`;
+    }).join('');
+    out.querySelectorAll('a[data-path]').forEach(a=> a.addEventListener('click', async ev=>{
+      ev.preventDefault();
+      const t=ev.currentTarget, label=t.textContent;
+      t.textContent='signing…';
+      try{ const url=await adminSignedUrl(t.dataset.path, t.dataset.name, srk); window.open(url,'_blank'); t.textContent=label; }
+      catch(err){ t.textContent='failed'; console.warn(err); }
+    }));
+  }catch(err){
+    out.innerHTML=`<p class="ax-sub" style="color:#ffc2cc">Couldn't load: ${esc(err.message||String(err))}</p>`;
+  }
+}
+
+/* ============================================================
+   PASSWORD GATE
+   ============================================================ */
+function unlock(){
+  document.getElementById("gate").style.display = "none";
+  document.getElementById("page").style.display = "block";
+  render();
+  initSubmissions();
+  initAdmin();
+  loadSubmitted();
+}
+function tryUnlock(){
+  const v = document.getElementById("gateInput").value.trim();
+  if (v === PAGE_PASSWORD){ sessionStorage.setItem("ehfl_ok","1"); unlock(); }
+  else { document.getElementById("gateError").textContent = "Wrong password — check the Patreon post."; }
+}
+document.getElementById("gateBtn").addEventListener("click", tryUnlock);
+document.getElementById("gateInput").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+if (sessionStorage.getItem("ehfl_ok")) unlock();
+</script>
+</body>
+</html>
