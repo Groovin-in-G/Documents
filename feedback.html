@@ -192,6 +192,23 @@
   .trk-final{flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; font-size:10px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--ok); font-weight:700; white-space:nowrap}
 
+  /* ---- Submission tracker (roster of all tracks) ---- */
+  .roster{margin-top:14px}
+  .roster .submit-head{margin-bottom:14px}
+  .ros-grid{display:grid; grid-template-columns:1fr 1fr; gap:5px 18px}
+  @media (max-width:620px){ .ros-grid{grid-template-columns:1fr} }
+  .ros-item{display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:9px; border:1px solid transparent; transition:background .15s, border-color .15s}
+  .ros-item.in{background:rgba(95,211,166,.06); border-color:rgba(95,211,166,.22)}
+  .ros-led{flex:0 0 auto; width:9px; height:9px; border-radius:50%; border:1.5px solid var(--line); background:transparent;
+    transition:background .15s, box-shadow .15s, border-color .15s}
+  .ros-item.in .ros-led{background:var(--ok); border-color:var(--ok); box-shadow:0 0 7px var(--ok)}
+  .ros-name{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; color:var(--muted)}
+  .ros-name b{font-weight:700}
+  .ros-item.in .ros-name{color:var(--text)}
+  .ros-name span{color:var(--muted); font-size:12px}
+  .ros-ver{flex:0 0 auto; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ok); font-weight:700; opacity:0}
+  .ros-item.in .ros-ver{opacity:1}
+
   /* ---- Admin modal ---- */
   #adminModal{position:fixed; inset:0; z-index:60; background:rgba(3,4,8,.86); display:none;
     align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto}
@@ -254,6 +271,15 @@
     </div>
     <p class="submit-intro">Finished your track for the compilation? Drop the <b>.wav</b> straight in here — no emails, no WeTransfer. You can re-upload any time and we'll always use your <b>latest</b> version.</p>
     <div id="subBody"></div>
+  </section>
+
+  <!-- ====== SUBMISSION TRACKER ====== -->
+  <section id="roster" class="submit roster" style="display:none">
+    <div class="submit-head">
+      <div class="kick2">Submission tracker</div>
+      <div class="submit-count" id="rosCount"></div>
+    </div>
+    <div class="ros-grid" id="rosGrid"></div>
   </section>
 
   <div id="content"></div>
@@ -1008,6 +1034,7 @@ async function loadSubmitted(){
     (rows||[]).forEach(r=> SUBMITTED[r.artist_key]=r);
     paintIndicators();
     updateSubCount();
+    paintRoster();
     if(document.getElementById("subForm")) wireSubFormHint();
   }catch(e){ console.warn("[submissions] summary failed:", e.message); }
 }
@@ -1025,6 +1052,31 @@ function updateSubCount(){
   const keys = allStreamTracks().map(t=>t.key);
   const done = keys.filter(k=> SUBMITTED[k]).length;
   el.innerHTML = `<span class="dot ok"></span>${done} of ${keys.length} final tracks in`;
+}
+
+/* ---- Submission tracker: every comp track + an LED that lights on submit ---- */
+function renderRoster(){
+  const grid = document.getElementById('rosGrid'); if(!grid) return;
+  grid.innerHTML = allStreamTracks().map(t=>`
+    <div class="ros-item" data-key="${t.key}">
+      <span class="ros-led"></span>
+      <span class="ros-name"><b>${esc(t.artist)}</b> <span>${esc(t.track)}</span></span>
+      <span class="ros-ver"></span>
+    </div>`).join('');
+  document.getElementById('roster').style.display = 'block';
+  paintRoster();
+}
+function paintRoster(){
+  const grid = document.getElementById('rosGrid'); if(!grid) return;
+  let done = 0; const total = grid.children.length;
+  grid.querySelectorAll('.ros-item').forEach(it=>{
+    const info = SUBMITTED[it.dataset.key];
+    const ver = it.querySelector('.ros-ver');
+    if(info){ it.classList.add('in'); ver.textContent = 'v'+info.versions; done++; }
+    else { it.classList.remove('in'); ver.textContent = ''; }
+  });
+  const c = document.getElementById('rosCount');
+  if(c) c.innerHTML = `<span class="dot ok"></span>${done} of ${total} in`;
 }
 
 /* ---- build + wire the upload form ---- */
@@ -1241,6 +1293,7 @@ function unlock(){
   document.getElementById("page").style.display = "block";
   render();
   initSubmissions();
+  renderRoster();
   initAdmin();
   loadSubmitted();
 }
