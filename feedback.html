@@ -985,6 +985,13 @@ function subEnabled(){ return !!(SUPABASE_URL && SUPABASE_ANON_KEY); }
 function slugify(s){ return String(s).toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"") || "x"; }
 function trackKey(artist, track){ return slugify(artist) + "__" + slugify(track); }
 function escAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
+function uuid(){   // crypto.randomUUID needs iOS 15.4+/secure context — fall back so older phones still upload
+  if (window.crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(ch){
+    const r = Math.floor(Math.random()*16), v = ch==="x" ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+}
 
 /* unique (artist, track) pairs pulled straight from the feedback data */
 function allStreamTracks(){
@@ -997,6 +1004,7 @@ function allStreamTracks(){
   out.sort((a,b)=> a.artist.localeCompare(b.artist) || a.track.localeCompare(b.track));
   return out;
 }
+function isKnownKey(k){ return allStreamTracks().some(t=> t.key===k); }
 
 /* ---- Supabase REST helpers (no SDK — pure fetch) ---- */
 function sbHeaders(key){ return { apikey:key, Authorization:"Bearer "+key, "Content-Type":"application/json" }; }
@@ -1023,6 +1031,13 @@ function uploadError(xhr){
   if(xhr.status===413 || /exceeded|too large|maximum/i.test(xhr.responseText||""))
     return new Error("That file is over the storage size limit. Try exporting a FLAC (lossless, ~40% smaller) — or ask Greg to raise the limit.");
   return new Error("Upload failed ("+xhr.status+"). "+(xhr.responseText||""));
+}
+async function recordWithRetry(args){   // upload already succeeded; retry the DB record once so a blip doesn't orphan the file
+  try{ return await sbRpc("record_submission", args); }
+  catch(e){ await new Promise(r=> setTimeout(r, 1200)); return await sbRpc("record_submission", args); }
+}
+function uploadFailMsg(err){
+  return `Couldn't upload: ${esc(err.message||String(err))} <b>Your file is still selected</b> — press the button to try again.`;
 }
 
 /* ---- "who's submitted" state + indicators ---- */
@@ -1073,7 +1088,7 @@ function rosterItems(){
 function renderRoster(){
   const grid = document.getElementById('rosGrid'); if(!grid) return;
   grid.innerHTML = rosterItems().map(t=>`
-    <div class="ros-item" data-key="${t.key}">
+    <div class="ros-item" data-key="${escAttr(t.key)}">
       <span class="ros-led"></span>
       <span class="ros-name"><b>${esc(t.artist)}</b> <span>${esc(t.track)}</span></span>
       ${t.extra ? `<span class="ros-add">added</span>` : ``}
@@ -1084,15 +1099,18 @@ function renderRoster(){
 }
 function paintRoster(){
   const grid = document.getElementById('rosGrid'); if(!grid) return;
-  let done = 0; const total = grid.children.length;
+  const knownKeys = allStreamTracks().map(t=>t.key);
+  let known = 0, added = 0;
   grid.querySelectorAll('.ros-item').forEach(it=>{
     const info = SUBMITTED[it.dataset.key];
     const ver = it.querySelector('.ros-ver');
-    if(info){ it.classList.add('in'); ver.textContent = 'v'+info.versions; done++; }
-    else { it.classList.remove('in'); ver.textContent = ''; }
+    if(info){
+      it.classList.add('in'); ver.textContent = 'v'+info.versions;
+      if(knownKeys.indexOf(it.dataset.key) >= 0) known++; else added++;
+    } else { it.classList.remove('in'); ver.textContent = ''; }
   });
   const c = document.getElementById('rosCount');
-  if(c) c.innerHTML = `<span class="dot ok"></span>${done} of ${total} in`;
+  if(c) c.innerHTML = `<span class="dot ok"></span>${known} of ${knownKeys.length} in${added ? ` · ${added} added` : ''}`;
 }
 
 /* ---- build + wire the upload form ---- */
@@ -1120,7 +1138,7 @@ function initSubmissions(){
         <label class="fld"><span class="fld-lab">Track title</span><input id="subTitle" type="text" placeholder="e.g. Crystal Visions" /></label>
       </div>
       <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload your track">
-        <input id="fileInput" type="file" accept=".wav,.aif,.aiff,.flac,.mp3,audio/*" hidden />
+        <input id="fileInput" type="file" accept="audio/*" hidden />
         <div class="dz-idle">
           <div class="dz-ico">⤓</div>
           <div class="dz-main">Drag &amp; drop your track here</div>
@@ -1139,7 +1157,8 @@ function initSubmissions(){
   wireSubForm();
 }
 
-let _subState = { file:null };
+let _subState = { file:null, uploading:false };
+window.addEventListener('beforeunload', e=>{ if(_subState.uploading){ e.preventDefault(); e.returnValue=''; } });
 function subCurrent(){
   const sel=document.getElementById('subTrack'); if(!sel) return null;
   if(sel.value==='__manual'){
@@ -1155,6 +1174,12 @@ function subCurrent(){
 function wireSubFormHint(){
   const c=subCurrent(), hint=document.getElementById('subHint'), btn=document.getElementById('subBtn');
   if(!hint) return;
+  if(c && !c.isListed && isKnownKey(c.key)){   // manual entry that matches a track already on the list
+    hint.hidden=false;
+    hint.innerHTML=`⚠️ <b>${esc(c.track)}</b> is already on the list — please pick it from the <b>dropdown above</b> so it tracks against the right artist.`;
+    if(btn){ btn.disabled=true; btn.textContent='Pick your track from the list'; }
+    return;
+  }
   if(c && SUBMITTED[c.key]){
     const v=SUBMITTED[c.key].versions;
     hint.hidden=false;
@@ -1194,10 +1219,11 @@ function wireSubForm(){
     if(f.size > SUB_MAX_MB*1024*1024){ flash(msg,'err',`That file is ${(f.size/1048576).toFixed(0)} MB — the limit is ${SUB_MAX_MB} MB. Try a FLAC export.`); return; }
     _subState.file=f;
     dzIdle.hidden=true; dzFile.hidden=false; dz.classList.add('has-file');
+    dz.removeAttribute('tabindex'); dz.removeAttribute('role');   // dropzone no longer the action; "change file" button is
     dzName.textContent=`${f.name} · ${(f.size/1048576).toFixed(1)} MB`;
     msg.hidden=true; wireSubFormHint();
   }
-  function clearFile(){ _subState.file=null; fileInput.value=''; dzIdle.hidden=false; dzFile.hidden=true; dz.classList.remove('has-file'); wireSubFormHint(); }
+  function clearFile(){ _subState.file=null; fileInput.value=''; dzIdle.hidden=false; dzFile.hidden=true; dz.classList.remove('has-file'); dz.setAttribute('tabindex','0'); dz.setAttribute('role','button'); wireSubFormHint(); }
 
   dz.addEventListener('click', e=>{ if(e.target===dzClear) return; if(!_subState.file) fileInput.click(); });
   dz.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && !_subState.file){ e.preventDefault(); fileInput.click(); } });
@@ -1207,16 +1233,30 @@ function wireSubForm(){
   dz.addEventListener('dragleave', e=>{ if(!dz.contains(e.relatedTarget)) dz.classList.remove('drag'); });
   dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); const f=e.dataTransfer.files && e.dataTransfer.files[0]; if(f) setFile(f); });
 
+  function setUploading(b){
+    _subState.uploading = b;
+    sel.disabled = b;
+    if(dzClear) dzClear.disabled = b;
+    dz.style.pointerEvents = b ? 'none' : '';
+  }
+
   form.addEventListener('submit', async e=>{
     e.preventDefault();
     const c=subCurrent(); if(!c || !_subState.file) return;
+    if(!c.isListed && isKnownKey(c.key)){   // belt-and-braces: never let a manual entry collide with a listed track
+      flash(msg,'err', `⚠️ <b>${esc(c.track)}</b> is already on the list — please pick it from the dropdown above so it tracks against the right artist.`);
+      return;
+    }
     const file=_subState.file;
+    setUploading(true);
     btn.disabled=true; btn.textContent='Uploading…'; msg.hidden=true; prog.hidden=false; progBar.style.width='0%';
     const ext=(file.name.split('.').pop()||'dat').toLowerCase();
-    const path=`${c.key}/${crypto.randomUUID()}.${ext}`;
+    const path=`${c.key}/${uuid()}.${ext}`;
+    let uploaded=false;
     try{
       await sbUpload(path, file, p=> progBar.style.width=Math.round(p*100)+'%');
-      const res=await sbRpc('record_submission', {
+      uploaded=true;
+      const res=await recordWithRetry({
         p_artist_key:c.key, p_artist:c.artist, p_track:c.track, p_is_listed:c.isListed,
         p_file_path:path, p_file_name:file.name, p_file_size:file.size, p_note:null
       });
@@ -1231,9 +1271,15 @@ function wireSubForm(){
       await loadSubmitted();
     }catch(err){
       prog.hidden=true;
-      flash(msg,'err', `Upload didn't go through: ${esc(err.message||String(err))} You can also send it over the usual way.`);
+      if(uploaded){   // bytes are safely in the bucket; only the DB record failed
+        flash(msg,'ok', `✅ Your file uploaded safely — but we couldn't log it just now. <b>No need to re-send.</b> Just message Greg so he can finish recording it.`);
+        clearFile();
+      } else {
+        flash(msg,'err', uploadFailMsg(err));
+      }
     }finally{
-      btn.disabled=false; wireSubFormHint();
+      setUploading(false);
+      wireSubFormHint();
     }
   });
   wireSubFormHint();
@@ -1249,8 +1295,9 @@ function initAdmin(){
   const modal=document.getElementById('adminModal');
   const link=document.getElementById('adminLink');
   if(!modal || !link) return;
-  link.addEventListener('click', e=>{ e.preventDefault(); modal.classList.add('show'); });
+  link.addEventListener('click', e=>{ e.preventDefault(); modal.classList.add('show'); const k=document.getElementById('axKey'); if(k) k.focus(); });
   modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('show'); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modal.classList.contains('show')) modal.classList.remove('show'); });
   document.getElementById('axClose').addEventListener('click', ()=> modal.classList.remove('show'));
   document.getElementById('axGo').addEventListener('click', loadAdmin);
   document.getElementById('axKey').addEventListener('keydown', e=>{ if(e.key==='Enter') loadAdmin(); });
@@ -1321,6 +1368,7 @@ function tryUnlock(){
 document.getElementById("gateBtn").addEventListener("click", tryUnlock);
 document.getElementById("gateInput").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
 if (sessionStorage.getItem("ehfl_ok")) unlock();
+else { const gi=document.getElementById("gateInput"); if(gi) gi.focus(); }
 </script>
 </body>
 </html>
