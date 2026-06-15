@@ -208,6 +208,7 @@
   .ros-name span{color:var(--muted); font-size:12px}
   .ros-ver{flex:0 0 auto; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ok); font-weight:700; opacity:0}
   .ros-item.in .ros-ver{opacity:1}
+  .ros-add{flex:0 0 auto; font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent-2); font-weight:700}
 
   /* ---- Admin modal ---- */
   #adminModal{position:fixed; inset:0; z-index:60; background:rgba(3,4,8,.86); display:none;
@@ -1034,7 +1035,7 @@ async function loadSubmitted(){
     (rows||[]).forEach(r=> SUBMITTED[r.artist_key]=r);
     paintIndicators();
     updateSubCount();
-    paintRoster();
+    renderRoster();
     if(document.getElementById("subForm")) wireSubFormHint();
   }catch(e){ console.warn("[submissions] summary failed:", e.message); }
 }
@@ -1054,13 +1055,28 @@ function updateSubCount(){
   el.innerHTML = `<span class="dot ok"></span>${done} of ${keys.length} final tracks in`;
 }
 
-/* ---- Submission tracker: every comp track + an LED that lights on submit ---- */
+/* ---- Submission tracker: every comp track + an LED that lights on submit ----
+   Shows the known lineup, PLUS any submitted track that wasn't on the original
+   list (manual/"not listed" entries — missed artists, or your & Alex's tracks). */
+function rosterItems(){
+  const items = allStreamTracks();
+  const known = {};
+  items.forEach(t=> known[t.key]=1);
+  Object.keys(SUBMITTED).sort().forEach(k=>{
+    if(!known[k]){
+      const r = SUBMITTED[k];
+      items.push({ key:k, artist:r.artist, track:r.track, extra:true });
+    }
+  });
+  return items;
+}
 function renderRoster(){
   const grid = document.getElementById('rosGrid'); if(!grid) return;
-  grid.innerHTML = allStreamTracks().map(t=>`
+  grid.innerHTML = rosterItems().map(t=>`
     <div class="ros-item" data-key="${t.key}">
       <span class="ros-led"></span>
       <span class="ros-name"><b>${esc(t.artist)}</b> <span>${esc(t.track)}</span></span>
+      ${t.extra ? `<span class="ros-add">added</span>` : ``}
       <span class="ros-ver"></span>
     </div>`).join('');
   document.getElementById('roster').style.display = 'block';
