@@ -149,11 +149,13 @@
 
   .fld{display:block; margin:0 0 12px}
   .fld-lab{display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 5px}
-  #subForm select, #subForm input[type=text]{width:100%; padding:12px 13px; border-radius:10px; border:1px solid var(--line);
+  #subForm select, #subForm input[type=text], #subForm input[type=email], #subForm textarea{width:100%; padding:12px 13px; border-radius:10px; border:1px solid var(--line);
     background:var(--panel-2); color:var(--text); font:inherit; font-size:14px}
-  #subForm select:focus, #subForm input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(255,131,81,.18)}
+  #subForm textarea{resize:vertical; min-height:88px; line-height:1.5}
+  #subForm select:focus, #subForm input:focus, #subForm textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(255,131,81,.18)}
   .manual{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   @media (max-width:560px){ .manual{grid-template-columns:1fr} }
+  .contact-intro{margin:0 0 14px; font-size:13px; color:var(--muted); line-height:1.5}
 
   .dropzone{position:relative; border:1.5px dashed var(--line); border-radius:12px; background:var(--panel-2);
     padding:22px 16px; text-align:center; cursor:pointer; transition:border-color .12s, background .12s; margin:4px 0}
@@ -980,6 +982,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SUB_BUCKET = "submissions";
 const SUB_MAX_MB = 200;
 const SUB_ACCEPT = ["wav","aif","aiff","flac","mp3"];
+const CONTACT_EMAIL = "groovingbiz@outlook.com";   // where "my track isn't listed" messages are sent
 function subEnabled(){ return !!(SUPABASE_URL && SUPABASE_ANON_KEY); }
 
 function slugify(s){ return String(s).toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"") || "x"; }
@@ -1133,25 +1136,30 @@ function initSubmissions(){
           <option value="__manual">➕ My track isn't listed…</option>
         </select>
       </label>
-      <div id="manualWrap" class="manual" hidden>
-        <label class="fld"><span class="fld-lab">Artist name</span><input id="subArtist" type="text" placeholder="e.g. Distant Lands" /></label>
-        <label class="fld"><span class="fld-lab">Track title</span><input id="subTitle" type="text" placeholder="e.g. Crystal Visions" /></label>
-      </div>
-      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload your track">
-        <input id="fileInput" type="file" accept="audio/*" hidden />
-        <div class="dz-idle">
-          <div class="dz-ico">⤓</div>
-          <div class="dz-main">Drag &amp; drop your track here</div>
-          <div class="dz-sub">or <u>click to browse</u> · WAV / AIFF / FLAC / MP3 · up to ${SUB_MAX_MB} MB</div>
+      <div id="uploadWrap">
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload your track">
+          <input id="fileInput" type="file" accept="audio/*" hidden />
+          <div class="dz-idle">
+            <div class="dz-ico">⤓</div>
+            <div class="dz-main">Drag &amp; drop your track here</div>
+            <div class="dz-sub">or <u>click to browse</u> · WAV / AIFF / FLAC / MP3 · up to ${SUB_MAX_MB} MB</div>
+          </div>
+          <div class="dz-file" hidden>
+            <div class="dz-fname" id="dzName"></div>
+            <button type="button" class="dz-clear" id="dzClear">change file</button>
+          </div>
         </div>
-        <div class="dz-file" hidden>
-          <div class="dz-fname" id="dzName"></div>
-          <button type="button" class="dz-clear" id="dzClear">change file</button>
-        </div>
+        <div id="subHint" class="sub-hint" hidden></div>
+        <div class="prog" id="prog" hidden><div class="prog-bar" id="progBar"></div></div>
+        <button type="submit" id="subBtn" class="sub-btn" disabled>Submit final track</button>
       </div>
-      <div id="subHint" class="sub-hint" hidden></div>
-      <div class="prog" id="prog" hidden><div class="prog-bar" id="progBar"></div></div>
-      <button type="submit" id="subBtn" class="sub-btn" disabled>Submit final track</button>
+      <div id="contactWrap" hidden>
+        <p class="contact-intro">Can't see your track on the list? Send Greg a quick message and he'll sort it out.</p>
+        <label class="fld"><span class="fld-lab">Your name</span><input id="ctName" type="text" placeholder="e.g. Distant Lands" /></label>
+        <label class="fld"><span class="fld-lab">Your email</span><input id="ctEmail" type="email" placeholder="so Greg can reply to you" /></label>
+        <label class="fld"><span class="fld-lab">Message</span><textarea id="ctMsg" rows="4" placeholder="Which track is it, and anything Greg should know…"></textarea></label>
+        <button type="button" id="ctBtn" class="sub-btn" disabled>Send message</button>
+      </div>
       <div id="subMsg" class="sub-msg" hidden></div>
     </form>`;
   wireSubForm();
@@ -1161,12 +1169,7 @@ let _subState = { file:null, uploading:false };
 window.addEventListener('beforeunload', e=>{ if(_subState.uploading){ e.preventDefault(); e.returnValue=''; } });
 function subCurrent(){
   const sel=document.getElementById('subTrack'); if(!sel) return null;
-  if(sel.value==='__manual'){
-    const a=(document.getElementById('subArtist').value||'').trim();
-    const t=(document.getElementById('subTitle').value||'').trim();
-    if(!a||!t) return null;
-    return { key:trackKey(a,t), artist:a, track:t, isListed:false };
-  }
+  if(sel.value==='__manual') return null;   // manual = "send a message" path, not an upload
   const opt=sel.selectedOptions[0];
   if(!opt || !opt.value) return null;
   return { key:opt.value, artist:opt.dataset.artist, track:opt.dataset.track, isListed:true };
@@ -1192,9 +1195,12 @@ function wireSubFormHint(){
 }
 function wireSubForm(){
   const sel=document.getElementById('subTrack');
-  const manualWrap=document.getElementById('manualWrap');
-  const subArtist=document.getElementById('subArtist');
-  const subTitle=document.getElementById('subTitle');
+  const uploadWrap=document.getElementById('uploadWrap');
+  const contactWrap=document.getElementById('contactWrap');
+  const ctName=document.getElementById('ctName');
+  const ctEmail=document.getElementById('ctEmail');
+  const ctMsg=document.getElementById('ctMsg');
+  const ctBtn=document.getElementById('ctBtn');
   const dz=document.getElementById('dropzone');
   const fileInput=document.getElementById('fileInput');
   const dzIdle=dz.querySelector('.dz-idle');
@@ -1208,9 +1214,46 @@ function wireSubForm(){
   const form=document.getElementById('subForm');
   _subState.file=null;
 
-  sel.addEventListener('change', ()=>{ manualWrap.hidden = sel.value!=='__manual'; wireSubFormHint(); });
-  if(subArtist) subArtist.addEventListener('input', wireSubFormHint);
-  if(subTitle)  subTitle.addEventListener('input', wireSubFormHint);
+  function applyMode(){
+    const manual = sel.value==='__manual';
+    uploadWrap.hidden = manual;
+    contactWrap.hidden = !manual;
+    msg.hidden = true;
+    if(!manual) wireSubFormHint();
+  }
+  sel.addEventListener('change', applyMode);
+
+  /* ---- contact ("my track isn't listed") form ---- */
+  function ctReady(){
+    return (ctName.value||'').trim() && /\S+@\S+\.\S+/.test((ctEmail.value||'').trim()) && (ctMsg.value||'').trim();
+  }
+  function wireCt(){ if(ctBtn && !ctBtn.dataset.sending) ctBtn.disabled = !ctReady(); }
+  [ctName, ctEmail, ctMsg].forEach(el=> el && el.addEventListener('input', wireCt));
+  ctBtn.addEventListener('click', async ()=>{
+    if(!ctReady()) return;
+    ctBtn.dataset.sending='1'; ctBtn.disabled=true; ctBtn.textContent='Sending…'; msg.hidden=true;
+    try{
+      const r=await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_EMAIL)}`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Accept':'application/json' },
+        body:JSON.stringify({
+          name: ctName.value.trim(),
+          email: ctEmail.value.trim(),
+          message: ctMsg.value.trim(),
+          _subject: `Track not listed: ${ctName.value.trim()}`,
+          _template: 'table'
+        })
+      });
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok || (j && j.success && String(j.success).toLowerCase()==='false')) throw new Error(j.message||'send failed');
+      flash(msg,'ok', `✅ Sent! Thanks ${esc(ctName.value.trim())} — Greg's got your message and will get back to you at <b>${esc(ctEmail.value.trim())}</b>.`);
+      ctName.value=''; ctEmail.value=''; ctMsg.value='';
+    }catch(err){
+      flash(msg,'err', `Couldn't send that just now. You can email Greg directly at <a href="mailto:${esc(CONTACT_EMAIL)}">${esc(CONTACT_EMAIL)}</a>.`);
+    }finally{
+      delete ctBtn.dataset.sending; ctBtn.textContent='Send message'; wireCt();
+    }
+  });
 
   function setFile(f){
     if(!f) return;
@@ -1266,8 +1309,7 @@ function wireSubForm(){
       flash(msg,'ok', upd
         ? `✅ Updated! <b>${esc(c.track)}</b> is now <b>version ${v}</b> — that's the one the team will use. Thanks ${esc(c.artist)}!`
         : `✅ Got it — <b>${esc(c.track)}</b> is in. Thanks ${esc(c.artist)}! You can re-upload any time and we'll always take your latest.`);
-      clearFile(); sel.selectedIndex=0; manualWrap.hidden=true;
-      if(subArtist) subArtist.value=''; if(subTitle) subTitle.value='';
+      clearFile(); sel.selectedIndex=0; applyMode();
       await loadSubmitted();
     }catch(err){
       prog.hidden=true;
