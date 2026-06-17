@@ -1032,7 +1032,7 @@ function sbUpload(path, file, onProgress){
 }
 function uploadError(xhr){
   if(xhr.status===413 || /exceeded|too large|maximum/i.test(xhr.responseText||""))
-    return new Error("That file is over the storage size limit. Try exporting a FLAC (lossless, ~40% smaller) — or ask Greg to raise the limit.");
+    return new Error("That file is over the storage size limit. Try exporting a FLAC (lossless, ~40% smaller) — or ask George to raise the limit.");
   return new Error("Upload failed ("+xhr.status+"). "+(xhr.responseText||""));
 }
 async function recordWithRetry(args){   // upload already succeeded; retry the DB record once so a blip doesn't orphan the file
@@ -1314,7 +1314,7 @@ function wireSubForm(){
     }catch(err){
       prog.hidden=true;
       if(uploaded){   // bytes are safely in the bucket; only the DB record failed
-        flash(msg,'ok', `✅ Your file uploaded safely — but we couldn't log it just now. <b>No need to re-send.</b> Just message Greg so he can finish recording it.`);
+        flash(msg,'ok', `✅ Your file uploaded safely — but we couldn't log it just now. <b>No need to re-send.</b> Just message George so he can finish recording it.`);
         clearFile();
       } else {
         flash(msg,'err', uploadFailMsg(err));
