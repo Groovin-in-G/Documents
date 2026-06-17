@@ -1154,10 +1154,10 @@ function initSubmissions(){
         <button type="submit" id="subBtn" class="sub-btn" disabled>Submit final track</button>
       </div>
       <div id="contactWrap" hidden>
-        <p class="contact-intro">Can't see your track on the list? Send Greg a quick message and he'll sort it out.</p>
-        <label class="fld"><span class="fld-lab">Your name</span><input id="ctName" type="text" placeholder="e.g. Distant Lands" /></label>
-        <label class="fld"><span class="fld-lab">Your email</span><input id="ctEmail" type="email" placeholder="so Greg can reply to you" /></label>
-        <label class="fld"><span class="fld-lab">Message</span><textarea id="ctMsg" rows="4" placeholder="Which track is it, and anything Greg should know…"></textarea></label>
+        <p class="contact-intro">Can't see your track on the list? Send George a quick message and he'll sort it out.</p>
+        <label class="fld"><span class="fld-lab">Name</span><input id="ctName" type="text" /></label>
+        <label class="fld"><span class="fld-lab">Email</span><input id="ctEmail" type="email" /></label>
+        <label class="fld"><span class="fld-lab">Message</span><textarea id="ctMsg" rows="5" placeholder="Sorry, we've missed out your track. Can you give us the title and the artist name and the feedback stream that it was included in? Any other useful information for us? Thank you."></textarea></label>
         <button type="button" id="ctBtn" class="sub-btn" disabled>Send message</button>
       </div>
       <div id="subMsg" class="sub-msg" hidden></div>
@@ -1246,10 +1246,10 @@ function wireSubForm(){
       });
       const j=await r.json().catch(()=>({}));
       if(!r.ok || (j && j.success && String(j.success).toLowerCase()==='false')) throw new Error(j.message||'send failed');
-      flash(msg,'ok', `✅ Sent! Thanks ${esc(ctName.value.trim())} — Greg's got your message and will get back to you at <b>${esc(ctEmail.value.trim())}</b>.`);
+      flash(msg,'ok', `✅ Sent! Thanks ${esc(ctName.value.trim())}, George has got your message and will get back to you at <b>${esc(ctEmail.value.trim())}</b>.`);
       ctName.value=''; ctEmail.value=''; ctMsg.value='';
     }catch(err){
-      flash(msg,'err', `Couldn't send that just now. You can email Greg directly at <a href="mailto:${esc(CONTACT_EMAIL)}">${esc(CONTACT_EMAIL)}</a>.`);
+      flash(msg,'err', `Couldn't send that just now. You can email George directly at <a href="mailto:${esc(CONTACT_EMAIL)}">${esc(CONTACT_EMAIL)}</a>.`);
     }finally{
       delete ctBtn.dataset.sending; ctBtn.textContent='Send message'; wireCt();
     }
