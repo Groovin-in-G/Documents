@@ -157,10 +157,14 @@
     border:1px solid var(--line); position:relative; cursor:pointer; overflow:hidden}
   .mini-fill{position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
   .mini-time{font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:36px; text-align:right; white-space:nowrap}
-  /* ---- Canvas waveform (finals only) ---- */
+  /* ---- Scrubber: simple slider when collapsed, small waveform when expanded ---- */
+  .scrub{min-width:0}
   .wave-box{flex:1 1 auto; min-width:110px; height:38px; cursor:pointer; position:relative}
   .wave{width:100%; height:100%; display:block}
-  /* Expanded (▸) full-width waveform shown in the row's panel */
+  .wave-box.small{height:38px}
+  .trk.wf:not(.expanded) .wave-box.small{display:none}   /* collapsed → just the slider */
+  .trk.wf.expanded .mini-bar{display:none}               /* expanded → small waveform swaps in */
+  /* Expanded full-width waveform shown in the row's panel */
   .wave-lgwrap{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:12px}
   .wave-box.lg{height:92px}
   /* E3 — filled caret box (clear dropdown affordance) */
@@ -398,11 +402,15 @@ function render(){
     const voteCtl = ph
       ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
       : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`;
-    const scrub = hasWave(t.id)
-      ? `<div class="wave-box" data-id="${t.id}"><canvas class="wave" data-id="${t.id}"></canvas></div>`
-      : `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
+    const fw = hasWave(t.id);   // has a precomputed waveform (i.e. a submitted final)
+    // Collapsed rows always show the simple slider; finals also carry a hidden small
+    // waveform that swaps in when the row is expanded (synced to the big one).
+    const scrub = `<div class="scrub">
+      <div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>
+      ${fw ? `<div class="wave-box small" data-id="${t.id}"><canvas class="wave" data-id="${t.id}"></canvas></div>` : ``}
+    </div>`;
     const badge = fin ? ' <span class="final-badge" title="Final master submitted"><span class="st">✦</span>final</span>' : '';
-    return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
+    return `<div class="trk${ph?' placeholder':''}${fw?' wf':''}" data-id="${t.id}">
       <div class="trk-head">
         <div class="num">${i+1}</div>
         <div class="meta">
@@ -503,7 +511,9 @@ let waveRAF = 0, wavePlaying = null;   // only the currently-playing final anima
 function waveTick(){
   const a = wavePlaying && audios[wavePlaying];
   if(a && !a.paused){
-    drawWave(wavePlaying);
+    drawWave(wavePlaying);   // paints visible canvases (small + big when expanded)
+    const f = document.querySelector(`.mini-bar[data-id="${wavePlaying}"] .mini-fill`);
+    if(f && a.duration) f.style.width = (a.currentTime/a.duration*100).toFixed(2)+"%";   // slider when collapsed
     const t = document.querySelector(`.mini-time[data-id="${wavePlaying}"]`);
     if(t) t.textContent = fmt(a.currentTime*1000);
     waveRAF = requestAnimationFrame(waveTick);
@@ -520,12 +530,13 @@ function ensureAudio(id){
   const fill = ()=>document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
   const time = ()=>document.querySelector(`.mini-time[data-id="${id}"]`);
   a.addEventListener("timeupdate", ()=>{ const t=time(); if(t && a.duration) t.textContent=fmt(a.currentTime*1000);
-    if(hasWave(id)){ if(a.paused) drawWave(id); } else { const f=fill(); if(f && a.duration) f.style.width=(a.currentTime/a.duration*100).toFixed(2)+"%"; } });
+    const f=fill(); if(f && a.duration) f.style.width=(a.currentTime/a.duration*100).toFixed(2)+"%";   // slider
+    if(hasWave(id) && a.paused) drawWave(id); });
   a.addEventListener("play",  ()=>{ pauseOthers(id); setIcon(id,true);
-    if(hasWave(id)){ wavePlaying=id; if(!waveRAF) waveRAF=requestAnimationFrame(waveTick); } });
+    wavePlaying=id; if(!waveRAF) waveRAF=requestAnimationFrame(waveTick); });
   a.addEventListener("pause", ()=>{ setIcon(id,false); if(hasWave(id)) drawWave(id); });
   a.addEventListener("ended", ()=>{ setIcon(id,false);
-    if(hasWave(id)){ drawWave(id); } else { const f=fill(); if(f) f.style.width="0%"; } });
+    const f=fill(); if(f) f.style.width="0%"; if(hasWave(id)) drawWave(id); });
   return a;
 }
 
@@ -563,9 +574,9 @@ function ensureFull(id, panel){
   w.bind(SC.Widget.Events.READY, ()=>{ w.bind(SC.Widget.Events.PLAY, ()=> pauseOthers(key)); });
 }
 
-// Expanded view for a FINAL: a big full-width waveform on the same audio (play + click-seek),
-// plus a 'final master' tag. Shares audios[id] and a second canvas.wave[data-id] that
-// drawWave()/setIcon() already keep in sync with the inline mini player.
+// Expanded view for a FINAL: a big full-width waveform on the same audio (play + click-seek).
+// Shares audios[id] and a second canvas.wave[data-id] that drawWave()/setIcon() keep in sync
+// with the row's small preview waveform.
 function ensureFullAudio(id, panel){
   if(panel.dataset.full) return; panel.dataset.full = "1";
   const wrap = document.createElement("div");
@@ -573,9 +584,7 @@ function ensureFullAudio(id, panel){
   wrap.innerHTML =
     `<button class="mini-play" data-id="${id}" aria-label="Play / pause">${ICON_PLAY}</button>` +
     `<div class="wave-box lg" data-id="${id}"><canvas class="wave" data-id="${id}"></canvas></div>`;
-  const tag = document.createElement("div");
-  tag.className = "final-tag"; tag.textContent = "Final master — submitted to Blue Dawn Records";
-  panel.appendChild(wrap); panel.appendChild(tag);
+  panel.appendChild(wrap);
   const a = audios[id];
   setIcon(id, !!(a && !a.paused));
   requestAnimationFrame(()=> drawWave(id));
@@ -613,12 +622,14 @@ tracksEl.addEventListener("click", e=>{
   }
   const exp = e.target.closest(".trk-exp");
   if(exp){
-    const id=exp.dataset.id, panel=exp.closest(".trk").querySelector(".trk-panel");
-    if(panel.hasAttribute("hidden")){ panel.removeAttribute("hidden"); exp.classList.add("open");
-      if(isFinal(id)) ensureFullAudio(id, panel); else ensureFull(id, panel); }
-    else { panel.setAttribute("hidden",""); exp.classList.remove("open"); }
+    const id=exp.dataset.id, trk=exp.closest(".trk"), panel=trk.querySelector(".trk-panel");
+    if(panel.hasAttribute("hidden")){ panel.removeAttribute("hidden"); exp.classList.add("open"); trk.classList.add("expanded");
+      if(isFinal(id)) ensureFullAudio(id, panel); else ensureFull(id, panel);
+      requestAnimationFrame(()=> drawWave(id)); }   // paint the now-visible small + big waveforms
+    else { panel.setAttribute("hidden",""); exp.classList.remove("open"); trk.classList.remove("expanded"); }
     return;
   }
+
 });
 
 // Preload inline players (staggered, after unlock) so the first tap plays fast.
