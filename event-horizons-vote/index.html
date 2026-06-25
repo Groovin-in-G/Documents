@@ -127,7 +127,7 @@
   /* Aligned single-row grid: num | name (fixed) | play | waveform | time | vote | expand.
      Fixed name column → play + waveform start at the same x on every row; sized so the
      longest artist name fits without truncating. */
-  .trk-head{display:grid; grid-template-columns:34px 264px 30px 1fr 46px auto 18px; align-items:center; gap:12px; padding:10px 14px}
+  .trk-head{display:grid; grid-template-columns:34px 264px 30px 1fr 46px auto 26px; align-items:center; gap:12px; padding:10px 14px}
   .num{flex:0 0 auto; width:34px; height:34px; border-radius:8px; display:grid; place-items:center;
     background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
   .trk.selected .num{color:var(--accent); border-color:var(--accent)}
@@ -135,9 +135,10 @@
   .meta .artist{font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; min-width:0}
   .meta .artist .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
   .meta .track{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px}
-  .final-badge{flex:0 0 auto; font-size:9.5px; letter-spacing:.10em; text-transform:uppercase; font-weight:800;
-    color:#04140d; background:linear-gradient(180deg,var(--ok),#3fb98a); border-radius:999px; padding:2px 7px;
-    box-shadow:0 0 10px rgba(95,211,166,.35)}
+  /* B5 — gold star + label, no pill, no glow (fits the Event Horizons palette) */
+  .final-badge{flex:0 0 auto; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800;
+    color:#f1c074; display:inline-flex; align-items:center; gap:4px; white-space:nowrap}
+  .final-badge .st{font-size:10px; line-height:1; color:#f7c24a}
   .vote{flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
     background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:7px 13px;
     font-size:13px; font-weight:600; color:var(--muted); transition:all .15s}
@@ -162,10 +163,12 @@
   /* Expanded (▸) full-width waveform shown in the row's panel */
   .wave-lgwrap{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:12px}
   .wave-box.lg{height:92px}
-  .trk-exp{flex:0 0 auto; background:none; border:0; color:var(--muted); cursor:pointer; font-size:13px;
-    padding:4px 6px; transition:transform .18s ease}
-  .trk-exp:hover{color:var(--accent)}
-  .trk-exp.open{transform:rotate(90deg); color:var(--accent)}
+  /* E3 — filled caret box (clear dropdown affordance) */
+  .trk-exp{flex:0 0 auto; width:26px; height:26px; border-radius:7px; background:var(--panel-2);
+    border:1px solid var(--line); color:var(--accent-2); cursor:pointer; display:grid; place-items:center;
+    font-size:12px; line-height:0; padding:0; transition:transform .18s ease, border-color .15s, color .15s}
+  .trk-exp:hover{border-color:var(--accent-2); color:var(--accent)}
+  .trk-exp.open{transform:rotate(180deg); border-color:var(--accent-2); color:var(--accent)}
   .trk-panel{padding:0 14px 14px}
   .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
   .embed-audio{width:100%; margin-top:2px}
@@ -398,7 +401,7 @@ function render(){
     const scrub = hasWave(t.id)
       ? `<div class="wave-box" data-id="${t.id}"><canvas class="wave" data-id="${t.id}"></canvas></div>`
       : `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
-    const badge = fin ? ' <span class="final-badge" title="Final master submitted">final</span>' : '';
+    const badge = fin ? ' <span class="final-badge" title="Final master submitted"><span class="st">✦</span>final</span>' : '';
     return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
       <div class="trk-head">
         <div class="num">${i+1}</div>
@@ -412,7 +415,7 @@ function render(){
              ${scrub}
              <span class="mini-time" data-id="${t.id}">0:00</span>`}
         ${voteCtl}
-        ${ph ? `<span></span>` : `<button class="trk-exp" data-id="${t.id}" aria-label="Expand waveform">▸</button>`}
+        ${ph ? `<span></span>` : `<button class="trk-exp" data-id="${t.id}" aria-label="Expand waveform">▾</button>`}
       </div>
       <div class="trk-panel" hidden></div>
     </div>`;
