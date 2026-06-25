@@ -302,9 +302,9 @@ const TOP_N = 12;
 // ---- Live vote-along banner (Patreon live can't be embedded, so we link out) ----
 // During the final livestream, set on:true and paste the Patreon live URL.
 const LIVE = {
-  on: false,
-  url: "",   // Patreon live post / stream URL
-  label: "The final vote-along is live now on Patreon. Watch along, then cast your 3 votes right here."
+  on: true,
+  url: "https://www.patreon.com/groovining/events/161949049",   // Patreon live event
+  label: "The Event Horizons vote-along livestream is on Patreon — Sat 28 June. Watch along, then cast your 3 votes right here."
 };
 
 const MAX_VOTES = 3;
@@ -376,7 +376,7 @@ const TRACKS = [
 
   // --- awaiting embeddable SoundCloud links ---
   { id:"bpatrol-staraligning",artist:"B-Patrol",             track:"Star Aligning",           placeholder:true, note:"Sent via WeTransfer — needs a SoundCloud upload to embed." },
-  { id:"axwax-rahmagic",      artist:"AxWax",                track:"Rah Magic",               placeholder:true, note:"Currently a Faircamp link — needs a SoundCloud upload to embed." },
+  { id:"axwax-rahmagic",      artist:"AxWax vs Socool",      track:"Rah Magic",               placeholder:true, note:"Currently a Faircamp link — needs a SoundCloud upload to embed." },
   { id:"newtype-sector9",     artist:"Newtype",              track:"Sector 9",                url:"https://soundcloud.com/newtype-uc/section-9-v3", secret:"s-iY2y6R4qVLl" },
 ];
 
