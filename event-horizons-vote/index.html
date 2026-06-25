@@ -124,9 +124,10 @@
     overflow:hidden; transition:border-color .15s, box-shadow .15s}
   .trk.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 26px rgba(255,131,81,.12)}
   .trk.placeholder{border-style:dashed; opacity:.75}
-  /* Stacked row: meta + time + vote on top; play + full-width waveform under. */
-  .trk-top{display:grid; grid-template-columns:34px 1fr auto auto; align-items:center; gap:13px; padding:12px 14px 0}
-  .trk-bot{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:13px; padding:10px 14px 13px}
+  /* Aligned single-row grid: num | name (fixed) | play | waveform | time | vote | expand.
+     Fixed name column → play + waveform start at the same x on every row; sized so the
+     longest artist name fits without truncating. */
+  .trk-head{display:grid; grid-template-columns:34px 264px 30px 1fr 46px auto 18px; align-items:center; gap:12px; padding:10px 14px}
   .num{flex:0 0 auto; width:34px; height:34px; border-radius:8px; display:grid; place-items:center;
     background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
   .trk.selected .num{color:var(--accent); border-color:var(--accent)}
@@ -143,7 +144,7 @@
   .vote input{accent-color:var(--accent); width:16px; height:16px; margin:0}
   .trk.selected .vote{color:var(--accent); border-color:var(--accent)}
   .vote.disabled{opacity:.4; cursor:not-allowed}
-  .trk-note{flex:1 1 auto; color:var(--muted); font-size:13px}
+  .trk-note{grid-column:3 / 6; color:var(--muted); font-size:13px}
 
   /* ---- Inline player (bottom row of each track) ---- */
   .mini-play{flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
@@ -156,8 +157,11 @@
   .mini-fill{position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
   .mini-time{font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:36px; text-align:right; white-space:nowrap}
   /* ---- Canvas waveform (finals only) ---- */
-  .wave-box{flex:1 1 auto; min-width:110px; height:40px; cursor:pointer; position:relative}
+  .wave-box{flex:1 1 auto; min-width:110px; height:38px; cursor:pointer; position:relative}
   .wave{width:100%; height:100%; display:block}
+  /* Expanded (▸) full-width waveform shown in the row's panel */
+  .wave-lgwrap{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:12px}
+  .wave-box.lg{height:92px}
   .trk-exp{flex:0 0 auto; background:none; border:0; color:var(--muted); cursor:pointer; font-size:13px;
     padding:4px 6px; transition:transform .18s ease}
   .trk-exp:hover{color:var(--accent)}
@@ -166,9 +170,19 @@
   .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
   .embed-audio{width:100%; margin-top:2px}
   .final-tag{margin-top:8px; font-size:11px; letter-spacing:.10em; text-transform:uppercase; color:var(--ok)}
-  @media (max-width:560px){
-    .trk-top{gap:10px}
-    .vote{padding:6px 11px}
+  /* Narrow screens: the fixed name column won't fit beside a waveform, so drop the
+     play+waveform onto their own line under the name (keeps full names + a usable wave). */
+  @media (max-width:640px){
+    .wrap{padding-left:13px; padding-right:13px}
+    .trk-head{grid-template-columns:34px 1fr auto auto; column-gap:9px; row-gap:10px; padding:10px 12px;
+      grid-template-areas:"num meta time vote" "play wave wave wave"}
+    .num{grid-area:num} .meta{grid-area:meta}
+    .mini-time{grid-area:time; align-self:center}
+    .vote{grid-area:vote; padding:6px 11px}
+    .mini-play{grid-area:play}
+    .wave-box,.mini-bar{grid-area:wave; width:auto; min-width:0}
+    .trk-note{grid-area:wave}
+    .trk-exp{display:none}
   }
 
   /* ---- Sticky vote bar ---- */
@@ -386,19 +400,19 @@ function render(){
       : `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
     const badge = fin ? ' <span class="final-badge" title="Final master submitted">final</span>' : '';
     return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
-      <div class="trk-top">
+      <div class="trk-head">
         <div class="num">${i+1}</div>
         <div class="meta">
           <div class="artist"><span class="nm">${t.artist}</span>${badge}</div>
           <div class="track">${t.track}</div>
         </div>
-        ${ph ? "" : `<span class="mini-time" data-id="${t.id}">0:00</span>`}
-        ${voteCtl}
-      </div>
-      <div class="trk-bot">
         ${ph
-          ? `<div></div><div class="trk-note">⏳ ${t.note}</div>`
-          : `<button class="mini-play" data-id="${t.id}" aria-label="Play / pause">${ICON_PLAY}</button>${scrub}`}
+          ? `<div class="trk-note">⏳ ${t.note}</div>`
+          : `<button class="mini-play" data-id="${t.id}" aria-label="Play / pause">${ICON_PLAY}</button>
+             ${scrub}
+             <span class="mini-time" data-id="${t.id}">0:00</span>`}
+        ${voteCtl}
+        ${ph ? `<span></span>` : `<button class="trk-exp" data-id="${t.id}" aria-label="Expand waveform">▸</button>`}
       </div>
       <div class="trk-panel" hidden></div>
     </div>`;
@@ -425,7 +439,7 @@ function fmt(ms){ const s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/6
 // The triangle's centroid sits at x≈12.2 so it reads centred rather than left-heavy.
 const ICON_PLAY  = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.3 L18.7 12 L9 17.7 Z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="6" width="3.4" height="12" rx="1.1"/><rect x="13.1" y="6" width="3.4" height="12" rx="1.1"/></svg>';
-function setIcon(id,playing){ const b=document.querySelector(`.mini-play[data-id="${id}"]`); if(b) b.innerHTML = playing?ICON_PAUSE:ICON_PLAY; }
+function setIcon(id,playing){ document.querySelectorAll(`.mini-play[data-id="${id}"]`).forEach(b=> b.innerHTML = playing?ICON_PAUSE:ICON_PLAY); }
 
 // Global one-at-a-time: pause every player (SoundCloud + native finals) except the one that just started.
 function pauseOthers(exceptKey){
@@ -437,11 +451,13 @@ function pauseOthers(exceptKey){
   });
 }
 
-/* ---- Canvas waveform overview (precomputed PEAKS, Metis-style bars) ---- */
-// Draw one track's waveform with the played portion tinted to the accent gradient.
+/* ---- Canvas waveform overview (precomputed PEAKS, Metis-style envelope) ---- */
+// Redraw every canvas bound to this track (the inline mini + the expanded large one).
 function drawWave(id){
-  const cvs = document.querySelector(`canvas.wave[data-id="${id}"]`);
-  if(!cvs) return;
+  document.querySelectorAll(`canvas.wave[data-id="${id}"]`).forEach(cvs=> paintWave(cvs, id));
+}
+// Paint one canvas: played portion tinted to the accent gradient, rest translucent steel.
+function paintWave(cvs, id){
   const peaks = PEAKS[id]; if(!peaks || peaks.length < 4) return;
   const box = cvs.parentElement, dpr = window.devicePixelRatio || 1;
   const w = box.clientWidth, h = box.clientHeight;
@@ -544,16 +560,22 @@ function ensureFull(id, panel){
   w.bind(SC.Widget.Events.READY, ()=>{ w.bind(SC.Widget.Events.PLAY, ()=> pauseOthers(key)); });
 }
 
-// Expanded full player for a FINAL: native <audio controls> on the public master.
+// Expanded view for a FINAL: a big full-width waveform on the same audio (play + click-seek),
+// plus a 'final master' tag. Shares audios[id] and a second canvas.wave[data-id] that
+// drawWave()/setIcon() already keep in sync with the inline mini player.
 function ensureFullAudio(id, panel){
   if(panel.dataset.full) return; panel.dataset.full = "1";
-  const a = document.createElement("audio");
-  a.className="embed-audio"; a.controls=true; a.preload="none"; a.src=FINALS[id];
-  audios[id+"#full"] = a;   // so global one-at-a-time can pause it too
-  a.addEventListener("play", ()=> pauseOthers(id+"#full"));
+  const wrap = document.createElement("div");
+  wrap.className = "wave-lgwrap";
+  wrap.innerHTML =
+    `<button class="mini-play" data-id="${id}" aria-label="Play / pause">${ICON_PLAY}</button>` +
+    `<div class="wave-box lg" data-id="${id}"><canvas class="wave" data-id="${id}"></canvas></div>`;
   const tag = document.createElement("div");
-  tag.className="final-tag"; tag.textContent="Final master — submitted to Blue Dawn Records";
-  panel.appendChild(a); panel.appendChild(tag);
+  tag.className = "final-tag"; tag.textContent = "Final master — submitted to Blue Dawn Records";
+  panel.appendChild(wrap); panel.appendChild(tag);
+  const a = audios[id];
+  setIcon(id, !!(a && !a.paused));
+  requestAnimationFrame(()=> drawWave(id));
 }
 
 function playPause(id){
