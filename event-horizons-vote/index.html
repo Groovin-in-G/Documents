@@ -520,7 +520,7 @@ let _waveRT; window.addEventListener("resize", ()=>{ clearTimeout(_waveRT); _wav
 // Native <audio> backing the inline scrubber for tracks that have a FINAL.
 function ensureAudio(id){
   if(audios[id]) return audios[id];
-  const a = new Audio(); a.preload = "none"; a.src = FINALS[id];
+  const a = new Audio(); a.preload = "auto"; a.src = FINALS[id];   // buffer ahead for instant play
   audios[id] = a;
   const fill = ()=>document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
   const time = ()=>document.querySelector(`.mini-time[data-id="${id}"]`);
@@ -626,6 +626,14 @@ function preloadMinis(){
   if (typeof SC === "undefined"){ setTimeout(preloadMinis, 400); return; }
   const list = TRACKS.filter(t=>!t.placeholder && !isFinal(t.id)); let i=0;
   (function next(){ if(i>=list.length) return; ensureSC(list[i].id); i++; setTimeout(next, 150); })();
+}
+
+// Warm the finals' native audio after unlock (staggered) so the FIRST tap plays instantly.
+// preload="auto" buffers the start; .load() kicks it off. Browser fetches progressively
+// (Supabase serves range requests), so playback can start before the whole file is in.
+function preloadFinals(){
+  const list = TRACKS.filter(t=>isFinal(t.id)); let i=0;
+  (function next(){ if(i>=list.length) return; const a=ensureAudio(list[i].id); try{a.load();}catch(e){} i++; setTimeout(next, 200); })();
 }
 
 function renderLiveBanner(){
@@ -800,7 +808,8 @@ function unlock(){
   document.getElementById("bar").style.display = "block";
   render(); syncUI();
   renderLiveBanner();
-  preloadMinis();
+  preloadFinals();   // warm native audio for instant first play of finals
+  preloadMinis();    // warm SoundCloud embeds
   requestAnimationFrame(drawAllWaves);   // draw waveforms once layout has width
   loadStandings();
   if(SHOW_LEADERBOARD && LEADERBOARD_CSV) setInterval(loadStandings, 30000);
