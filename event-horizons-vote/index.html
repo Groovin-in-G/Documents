@@ -124,13 +124,16 @@
     overflow:hidden; transition:border-color .15s, box-shadow .15s}
   .trk.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 26px rgba(255,131,81,.12)}
   .trk.placeholder{border-style:dashed; opacity:.75}
-  .trk-head{display:flex; align-items:center; gap:12px; padding:11px 14px}
-  .num{flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+  /* Stacked row: meta + time + vote on top; play + full-width waveform under. */
+  .trk-top{display:grid; grid-template-columns:34px 1fr auto auto; align-items:center; gap:13px; padding:12px 14px 0}
+  .trk-bot{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:13px; padding:10px 14px 13px}
+  .num{flex:0 0 auto; width:34px; height:34px; border-radius:8px; display:grid; place-items:center;
     background:var(--panel-2); border:1px solid var(--line); font-size:13px; color:var(--muted)}
   .trk.selected .num{color:var(--accent); border-color:var(--accent)}
-  .meta{flex:0 1 auto; min-width:0}
-  .meta .artist{font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-  .meta .track{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .meta{min-width:0}
+  .meta .artist{font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; min-width:0}
+  .meta .artist .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+  .meta .track{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px}
   .final-badge{flex:0 0 auto; font-size:9.5px; letter-spacing:.10em; text-transform:uppercase; font-weight:800;
     color:#04140d; background:linear-gradient(180deg,var(--ok),#3fb98a); border-radius:999px; padding:2px 7px;
     box-shadow:0 0 10px rgba(95,211,166,.35)}
@@ -142,8 +145,7 @@
   .vote.disabled{opacity:.4; cursor:not-allowed}
   .trk-note{flex:1 1 auto; color:var(--muted); font-size:13px}
 
-  /* ---- Inline mini-player ---- */
-  .mini{flex:1 1 auto; min-width:110px; display:flex; align-items:center; gap:9px; margin:0 4px}
+  /* ---- Inline player (bottom row of each track) ---- */
   .mini-play{flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
     background:var(--panel-2); color:var(--accent); cursor:pointer; display:grid; place-items:center;
     line-height:0; padding:0}
@@ -152,7 +154,7 @@
   .mini-bar{flex:1 1 auto; height:8px; border-radius:4px; background:var(--panel-2);
     border:1px solid var(--line); position:relative; cursor:pointer; overflow:hidden}
   .mini-fill{position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
-  .mini-time{flex:0 0 auto; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:32px; text-align:right}
+  .mini-time{font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:36px; text-align:right; white-space:nowrap}
   /* ---- Canvas waveform (finals only) ---- */
   .wave-box{flex:1 1 auto; min-width:110px; height:40px; cursor:pointer; position:relative}
   .wave{width:100%; height:100%; display:block}
@@ -164,10 +166,9 @@
   .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
   .embed-audio{width:100%; margin-top:2px}
   .final-tag{margin-top:8px; font-size:11px; letter-spacing:.10em; text-transform:uppercase; color:var(--ok)}
-  @media (max-width:620px){
-    .trk-head{flex-wrap:wrap}
-    .num{order:0} .meta{order:1; flex:1 1 auto} .vote{order:2}
-    .mini{order:3; flex-basis:100%; width:100%; margin:8px 0 0}
+  @media (max-width:560px){
+    .trk-top{gap:10px}
+    .vote{padding:6px 11px}
   }
 
   /* ---- Sticky vote bar ---- */
@@ -383,23 +384,21 @@ function render(){
     const scrub = hasWave(t.id)
       ? `<div class="wave-box" data-id="${t.id}"><canvas class="wave" data-id="${t.id}"></canvas></div>`
       : `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
-    const mini = ph
-      ? `<div class="trk-note">⏳ ${t.note}</div>`
-      : `<div class="mini" data-id="${t.id}">
-           <button class="mini-play" data-id="${t.id}" aria-label="Play / pause">${ICON_PLAY}</button>
-           ${scrub}
-           <span class="mini-time">0:00</span>
-         </div>`;
+    const badge = fin ? ' <span class="final-badge" title="Final master submitted">final</span>' : '';
     return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
-      <div class="trk-head">
+      <div class="trk-top">
         <div class="num">${i+1}</div>
         <div class="meta">
-          <div class="artist">${t.artist}${fin?' <span class="final-badge" title="Final master submitted">final</span>':''}</div>
+          <div class="artist"><span class="nm">${t.artist}</span>${badge}</div>
           <div class="track">${t.track}</div>
         </div>
-        ${mini}
+        ${ph ? "" : `<span class="mini-time" data-id="${t.id}">0:00</span>`}
         ${voteCtl}
-        ${ph ? "" : `<button class="trk-exp" data-id="${t.id}" aria-label="Open full player">▸</button>`}
+      </div>
+      <div class="trk-bot">
+        ${ph
+          ? `<div></div><div class="trk-note">⏳ ${t.note}</div>`
+          : `<button class="mini-play" data-id="${t.id}" aria-label="Play / pause">${ICON_PLAY}</button>${scrub}`}
       </div>
       <div class="trk-panel" hidden></div>
     </div>`;
@@ -486,7 +485,7 @@ function waveTick(){
   const a = wavePlaying && audios[wavePlaying];
   if(a && !a.paused){
     drawWave(wavePlaying);
-    const t = document.querySelector(`.mini[data-id="${wavePlaying}"] .mini-time`);
+    const t = document.querySelector(`.mini-time[data-id="${wavePlaying}"]`);
     if(t) t.textContent = fmt(a.currentTime*1000);
     waveRAF = requestAnimationFrame(waveTick);
   } else { waveRAF = 0; }
@@ -500,7 +499,7 @@ function ensureAudio(id){
   const a = new Audio(); a.preload = "none"; a.src = FINALS[id];
   audios[id] = a;
   const fill = ()=>document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
-  const time = ()=>document.querySelector(`.mini[data-id="${id}"] .mini-time`);
+  const time = ()=>document.querySelector(`.mini-time[data-id="${id}"]`);
   a.addEventListener("timeupdate", ()=>{ const t=time(); if(t && a.duration) t.textContent=fmt(a.currentTime*1000);
     if(hasWave(id)){ if(a.paused) drawWave(id); } else { const f=fill(); if(f && a.duration) f.style.width=(a.currentTime/a.duration*100).toFixed(2)+"%"; } });
   a.addEventListener("play",  ()=>{ pauseOthers(id); setIcon(id,true);
@@ -523,7 +522,7 @@ function ensureMini(id, cb){
   const w = SC.Widget(iframe); players[id] = w;
   w.bind(SC.Widget.Events.READY, ()=>{
     const fill = document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
-    const time = document.querySelector(`.mini[data-id="${id}"] .mini-time`);
+    const time = document.querySelector(`.mini-time[data-id="${id}"]`);
     w.bind(SC.Widget.Events.PLAY_PROGRESS, e=>{ if(fill) fill.style.width=(e.relativePosition*100).toFixed(2)+"%"; if(time) time.textContent=fmt(e.currentPosition); });
     w.bind(SC.Widget.Events.PLAY, ()=>{ pauseOthers(id); setIcon(id,true); });
     w.bind(SC.Widget.Events.PAUSE, ()=> setIcon(id,false));
