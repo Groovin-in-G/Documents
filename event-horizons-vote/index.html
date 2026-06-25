@@ -162,14 +162,17 @@
   .wave{width:100%; height:100%; display:block}
   /* Expanded full-width waveform shown in the row's panel */
   .wave-lgwrap{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:12px}
-  .wave-box.lg{height:92px}
+  .wave-box.lg{height:70px}
   /* E3 — filled caret box (clear dropdown affordance) */
   .trk-exp{flex:0 0 auto; width:26px; height:26px; border-radius:7px; background:var(--panel-2);
     border:1px solid var(--line); color:var(--accent-2); cursor:pointer; display:grid; place-items:center;
     font-size:12px; line-height:0; padding:0; transition:transform .18s ease, border-color .15s, color .15s}
   .trk-exp:hover{border-color:var(--accent-2); color:var(--accent)}
   .trk-exp.open{transform:rotate(180deg); border-color:var(--accent-2); color:var(--accent)}
-  .trk-panel{padding:0 14px 14px}
+  /* Panel collapses via max-height (NOT display:none) so a SoundCloud embed inside it
+     keeps running + driving the row slider while collapsed. */
+  .trk-panel{max-height:0; overflow:hidden; padding:0 14px; transition:max-height .22s ease}
+  .trk.expanded .trk-panel{max-height:760px; padding:4px 14px 14px}
   .embed{border:0; width:100%; height:120px; border-radius:8px; background:var(--panel-2)}
   .embed-audio{width:100%; margin-top:2px}
   .final-tag{margin-top:8px; font-size:11px; letter-spacing:.10em; text-transform:uppercase; color:var(--ok)}
@@ -417,7 +420,7 @@ function render(){
         ${voteCtl}
         ${ph ? `<span></span>` : `<button class="trk-exp" data-id="${t.id}" aria-label="Expand waveform">▾</button>`}
       </div>
-      <div class="trk-panel" hidden></div>
+      <div class="trk-panel"></div>
     </div>`;
   }).join("");
 
@@ -532,38 +535,31 @@ function ensureAudio(id){
   return a;
 }
 
-// Hidden widget powering the inline scrubber.
-function ensureMini(id, cb){
-  if (typeof SC === "undefined") return;
+// ONE SoundCloud widget per track = the embed shown in the dropdown panel, which ALSO
+// drives the row's top slider (so the slider and the embed are the same player and stay
+// in sync). The panel collapses via max-height (not display:none) so the embed keeps
+// running + reporting progress to the slider even while the row is collapsed.
+function ensureSC(id, cb){
+  if (typeof SC === "undefined"){ setTimeout(()=>ensureSC(id,cb), 250); return; }
   if (players[id]) { cb && cb(players[id]); return; }
   const t = TRACKS.find(x=>x.id===id);
-  const iframe = document.createElement("iframe");
-  iframe.allow = "autoplay";
-  iframe.src = scURL(t) + "&visual=false&sharing=false&download=false&buying=false&show_comments=false";
-  scHost.appendChild(iframe);
-  const w = SC.Widget(iframe); players[id] = w;
-  w.bind(SC.Widget.Events.READY, ()=>{
-    const fill = document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
-    const time = document.querySelector(`.mini-time[data-id="${id}"]`);
-    w.bind(SC.Widget.Events.PLAY_PROGRESS, e=>{ if(fill) fill.style.width=(e.relativePosition*100).toFixed(2)+"%"; if(time) time.textContent=fmt(e.currentPosition); });
-    w.bind(SC.Widget.Events.PLAY, ()=>{ pauseOthers(id); setIcon(id,true); });
-    w.bind(SC.Widget.Events.PAUSE, ()=> setIcon(id,false));
-    w.bind(SC.Widget.Events.FINISH, ()=>{ setIcon(id,false); if(fill) fill.style.width="0%"; });
-    cb && cb(w);
-  });
-}
-
-// Full SoundCloud player (waveform + link) shown when a row is expanded.
-function ensureFull(id, panel){
-  const key = id+"#full";
-  if (players[key] || typeof SC === "undefined") return;
-  const t = TRACKS.find(x=>x.id===id);
+  const panel = document.querySelector(`.trk[data-id="${id}"] .trk-panel`);
+  if(!panel) return;
   const iframe = document.createElement("iframe");
   iframe.className="embed"; iframe.allow="autoplay"; iframe.scrolling="no"; iframe.setAttribute("frameborder","no");
   iframe.src = scURL(t) + "&visual=false&show_user=true&show_comments=false";
   panel.appendChild(iframe);
-  const w = SC.Widget(iframe); players[key] = w;
-  w.bind(SC.Widget.Events.READY, ()=>{ w.bind(SC.Widget.Events.PLAY, ()=> pauseOthers(key)); });
+  const w = SC.Widget(iframe); players[id] = w;
+  w.bind(SC.Widget.Events.READY, ()=>{
+    const fill = ()=>document.querySelector(`.mini-bar[data-id="${id}"] .mini-fill`);
+    const time = ()=>document.querySelector(`.mini-time[data-id="${id}"]`);
+    w.bind(SC.Widget.Events.PLAY_PROGRESS, e=>{ const f=fill(),tm=time();
+      if(f) f.style.width=(e.relativePosition*100).toFixed(2)+"%"; if(tm) tm.textContent=fmt(e.currentPosition); });
+    w.bind(SC.Widget.Events.PLAY,  ()=>{ pauseOthers(id); setIcon(id,true); });
+    w.bind(SC.Widget.Events.PAUSE, ()=> setIcon(id,false));
+    w.bind(SC.Widget.Events.FINISH,()=>{ setIcon(id,false); const f=fill(); if(f) f.style.width="0%"; });
+    cb && cb(w);
+  });
 }
 
 // Expanded view for a FINAL: a big full-width waveform on the same audio (play + click-seek).
@@ -584,7 +580,7 @@ function ensureFullAudio(id, panel){
 
 function playPause(id){
   if(isFinal(id)){ const a=ensureAudio(id); if(a.paused){ pauseOthers(id); a.play(); } else { a.pause(); } return; }
-  ensureMini(id, w=>{ w.isPaused(p=>{ if(p){ pauseOthers(id); w.play(); } else { w.pause(); } }); });
+  ensureSC(id, w=>{ w.isPaused(p=>{ if(p){ pauseOthers(id); w.play(); } else { w.pause(); } }); });
 }
 
 tracksEl.addEventListener("click", e=>{
@@ -609,26 +605,27 @@ tracksEl.addEventListener("click", e=>{
       if(a.readyState>=1) go(); else { a.addEventListener("loadedmetadata", go, {once:true}); a.load(); }
       return;
     }
-    ensureMini(id, w=>{ pauseOthers(id); w.getDuration(d=>{ w.seekTo(d*frac); w.play(); }); });
+    ensureSC(id, w=>{ pauseOthers(id); w.getDuration(d=>{ w.seekTo(d*frac); w.play(); }); });
     return;
   }
   const exp = e.target.closest(".trk-exp");
   if(exp){
     const id=exp.dataset.id, trk=exp.closest(".trk"), panel=trk.querySelector(".trk-panel");
-    if(panel.hasAttribute("hidden")){ panel.removeAttribute("hidden"); exp.classList.add("open"); trk.classList.add("expanded");
-      if(isFinal(id)) ensureFullAudio(id, panel); else ensureFull(id, panel);
-      requestAnimationFrame(()=> drawWave(id)); }   // paint the now-visible small + big waveforms
-    else { panel.setAttribute("hidden",""); exp.classList.remove("open"); trk.classList.remove("expanded"); }
+    if(!trk.classList.contains("expanded")){ trk.classList.add("expanded"); exp.classList.add("open");
+      if(isFinal(id)) ensureFullAudio(id, panel); else ensureSC(id);
+      requestAnimationFrame(()=> drawWave(id)); }   // paint the now-visible big waveform (finals)
+    else { trk.classList.remove("expanded"); exp.classList.remove("open"); }
     return;
   }
 
 });
 
-// Preload inline players (staggered, after unlock) so the first tap plays fast.
+// Preload SoundCloud embeds (staggered, after unlock) so the first tap plays fast.
+// Each lives height-collapsed in its row's panel and reveals on expand.
 function preloadMinis(){
   if (typeof SC === "undefined"){ setTimeout(preloadMinis, 400); return; }
   const list = TRACKS.filter(t=>!t.placeholder && !isFinal(t.id)); let i=0;
-  (function next(){ if(i>=list.length) return; ensureMini(list[i].id); i++; setTimeout(next, 120); })();
+  (function next(){ if(i>=list.length) return; ensureSC(list[i].id); i++; setTimeout(next, 150); })();
 }
 
 function renderLiveBanner(){
