@@ -157,13 +157,9 @@
     border:1px solid var(--line); position:relative; cursor:pointer; overflow:hidden}
   .mini-fill{position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
   .mini-time{font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:36px; text-align:right; white-space:nowrap}
-  /* ---- Scrubber: simple slider when collapsed, small waveform when expanded ---- */
-  .scrub{min-width:0}
+  /* ---- Scrubber: simple slider in the row; detailed waveform only in the dropdown ---- */
   .wave-box{flex:1 1 auto; min-width:110px; height:38px; cursor:pointer; position:relative}
   .wave{width:100%; height:100%; display:block}
-  .wave-box.small{height:38px}
-  .trk.wf:not(.expanded) .wave-box.small{display:none}   /* collapsed → just the slider */
-  .trk.wf.expanded .mini-bar{display:none}               /* expanded → small waveform swaps in */
   /* Expanded full-width waveform shown in the row's panel */
   .wave-lgwrap{display:grid; grid-template-columns:30px 1fr; align-items:center; gap:12px}
   .wave-box.lg{height:92px}
@@ -402,15 +398,11 @@ function render(){
     const voteCtl = ph
       ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
       : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`;
-    const fw = hasWave(t.id);   // has a precomputed waveform (i.e. a submitted final)
-    // Collapsed rows always show the simple slider; finals also carry a hidden small
-    // waveform that swaps in when the row is expanded (synced to the big one).
-    const scrub = `<div class="scrub">
-      <div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>
-      ${fw ? `<div class="wave-box small" data-id="${t.id}"><canvas class="wave" data-id="${t.id}"></canvas></div>` : ``}
-    </div>`;
+    // Every row keeps the simple slider, collapsed AND expanded. The detailed
+    // waveform only appears in the dropdown panel below (big), not in the row.
+    const scrub = `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
     const badge = fin ? ' <span class="final-badge" title="Final master submitted"><span class="st">✦</span>final</span>' : '';
-    return `<div class="trk${ph?' placeholder':''}${fw?' wf':''}" data-id="${t.id}">
+    return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
       <div class="trk-head">
         <div class="num">${i+1}</div>
         <div class="meta">
