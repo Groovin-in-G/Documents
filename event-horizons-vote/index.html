@@ -121,9 +121,20 @@
   .vframe{position:relative; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
     border:1px solid var(--line); background:#000}
   .vframe iframe{position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:10px}
-  .vcap{margin-top:9px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:7px}
+  .vcap{margin-top:9px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px;
+    width:100%; background:none; border:0; padding:4px 4px 3px; border-radius:8px; cursor:pointer;
+    font-family:inherit; text-align:left; transition:background .12s}
+  .vcap:hover{background:rgba(255,131,81,.07)}
   .vcap .pt{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent);
-    border:1px solid var(--line); border-radius:999px; padding:1px 8px}
+    border:1px solid var(--line); border-radius:999px; padding:1px 8px; transition:border-color .12s, color .12s}
+  .vcap:hover .pt{border-color:var(--accent)}
+  .vcap-go{font-size:11px; color:var(--muted); transition:color .12s}
+  .vcap:hover .vcap-go{color:var(--accent)}
+  .vcap:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  /* clickable track number → jump to that track in the stream */
+  .num.jump{cursor:pointer; transition:border-color .12s, color .12s, background .12s}
+  .num.jump:hover{border-color:var(--accent); color:var(--accent); background:rgba(255,131,81,.10)}
+  .num.jump:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
   @media (max-width:560px){ .vgrid{grid-template-columns:1fr} }
 
   /* ---- Live vote-along banner ---- */
@@ -281,12 +292,12 @@
     <div class="vid-head">Watch the launch of Event Horizons</div>
     <div class="vgrid">
       <div>
-        <div class="vframe"><iframe src="https://www.youtube.com/embed/4SgGQ1LHK6I?rel=0" title="Event Horizons launch — part 1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
-        <div class="vcap"><span class="pt">Part 1</span></div>
+        <div class="vframe"><div id="yt-part1"></div></div>
+        <button type="button" class="vcap" data-part="1"><span class="pt">Part 1</span><span class="vcap-go">▶ Play</span></button>
       </div>
       <div>
-        <div class="vframe"><iframe src="https://www.youtube.com/embed/tcVTt_VzXeY?rel=0" title="Event Horizons launch — part 2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
-        <div class="vcap"><span class="pt">Part 2</span></div>
+        <div class="vframe"><div id="yt-part2"></div></div>
+        <button type="button" class="vcap" data-part="2"><span class="pt">Part 2</span><span class="vcap-go">▶ Play</span></button>
       </div>
     </div>
   </div>
@@ -464,9 +475,13 @@ function render(){
     // waveform only appears in the dropdown panel below (big), not in the row.
     const scrub = `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
     const badge = fin ? ' <span class="final-badge" title="Final master submitted"><span class="st">✦</span>final</span>' : '';
+    const jump = CHAPTERS[t.id];
+    const numCell = jump
+      ? `<div class="num jump" role="button" tabindex="0" data-jump="${t.id}" title="Jump to ${t.artist} in Part ${jump.part}">${i+1}</div>`
+      : `<div class="num">${i+1}</div>`;
     return `<div class="trk${ph?' placeholder':''}" data-id="${t.id}">
       <div class="trk-head">
-        <div class="num">${i+1}</div>
+        ${numCell}
         <div class="meta">
           <div class="artist"><span class="nm">${t.artist}</span>${badge}</div>
           <div class="track">${t.track}</div>
@@ -506,7 +521,9 @@ const ICON_PLAY  = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.3 
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="6" width="3.4" height="12" rx="1.1"/><rect x="13.1" y="6" width="3.4" height="12" rx="1.1"/></svg>';
 function setIcon(id,playing){ document.querySelectorAll(`.mini-play[data-id="${id}"]`).forEach(b=> b.innerHTML = playing?ICON_PAUSE:ICON_PLAY); }
 
-// Global one-at-a-time: pause every player (SoundCloud + native finals) except the one that just started.
+// Global one-at-a-time: pause every player (SoundCloud + native finals) except the one that just
+// started. Also silence the launch videos — unless the trigger WAS a video (exceptKey "__video__"),
+// in which case the video layer manages itself. This makes audio mono across the whole page.
 function pauseOthers(exceptKey){
   Object.keys(players).forEach(k=>{
     if(k!==exceptKey){ players[k].pause(); if(!k.includes("#")) setIcon(k,false); }
@@ -514,6 +531,7 @@ function pauseOthers(exceptKey){
   Object.keys(audios).forEach(k=>{
     if(k!==exceptKey){ audios[k].pause(); setIcon(k,false); }
   });
+  if(exceptKey !== "__video__") pauseVideos();
 }
 
 /* ---- Canvas waveform overview (precomputed PEAKS, Metis-style envelope) ---- */
@@ -643,6 +661,8 @@ function playPause(id){
 }
 
 tracksEl.addEventListener("click", e=>{
+  const numEl = e.target.closest(".num.jump");
+  if(numEl){ const j=CHAPTERS[numEl.dataset.jump]; if(j) playPart(j.part, j.sec); return; }
   const pb = e.target.closest(".mini-play");
   if(pb){ playPause(pb.dataset.id); return; }
   const wb = e.target.closest(".wave-box");
@@ -677,6 +697,13 @@ tracksEl.addEventListener("click", e=>{
     return;
   }
 
+});
+
+// Keyboard: Enter/Space on a clickable track number jumps to it in the video.
+tracksEl.addEventListener("keydown", e=>{
+  const n = e.target.closest(".num.jump");
+  if(n && (e.key==="Enter" || e.key===" ")){ e.preventDefault();
+    const j=CHAPTERS[n.dataset.jump]; if(j) playPart(j.part, j.sec); }
 });
 
 // Preload SoundCloud embeds (staggered, after unlock) so the first tap plays fast.
@@ -857,6 +884,72 @@ async function loadStandings(){
     list.innerHTML='<li class="st-empty">Standings unavailable right now.</li>';
   }
 }
+
+/* ============================================================
+   VOTE-ALONG VIDEOS  (YouTube IFrame API)
+   Two embedded launch streams. Audio is mono across the whole page:
+   playing a video stops the other video AND any track; playing a track
+   stops both videos (via pauseOthers). Clicking a track's number jumps
+   the right stream to the moment that track is played.
+   ============================================================ */
+const YT_PARTS = { 1:"4SgGQ1LHK6I", 2:"tcVTt_VzXeY" };
+// track id -> { part, sec } : second-offset where the host introduces each track,
+// read from the stream captions (the .vtt is ground truth). Drumatic — Reckless was
+// never played (no WAV), so it has no jump target.
+const CHAPTERS = {
+  // Part 1 — first stream (4SgGQ1LHK6I)
+  "amalgam-noblewoods":{part:1,sec:1735},  "aquarelle-lumos":{part:1,sec:2297},
+  "bpatrol-staraligning":{part:1,sec:2923},"fatalstrategy-feeling":{part:1,sec:3520},
+  "graish-syrup":{part:1,sec:4203},        "indo-believe":{part:1,sec:5000},
+  "kosu-letgo":{part:1,sec:5481},          "monsieurbruit-footwork":{part:1,sec:6245},
+  "prototype-cls":{part:1,sec:6610},       "rjmacready-algebrast":{part:1,sec:7026},
+  "stvpid-seeme":{part:1,sec:7417},        "distantlands-crystal":{part:1,sec:8147},
+  "fwm-polaris":{part:1,sec:8767},         "tdel-e39":{part:1,sec:9214},
+  "anonym-shuffle":{part:1,sec:9838},      "kapellich-dolce":{part:1,sec:10226},
+  "axwax-rahmagic":{part:1,sec:10809},
+  // Part 2 — second stream (tcVTt_VzXeY)
+  "trident-mysteries":{part:2,sec:889},    "williamsmix-ambi":{part:2,sec:1434},
+  "drumatic-selectah":{part:2,sec:1903},   "legoisland-pool":{part:2,sec:2297},
+  "newtype-sector9":{part:2,sec:2917},     "ravedeath-storm":{part:2,sec:3452},
+  "tsuki-jungle":{part:2,sec:4135},        "saluu-forever":{part:2,sec:4490}
+};
+
+const ytPlayers = {}; let ytReady = false; const ytQueue = [];
+(function(){ const s=document.createElement("script"); s.src="https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
+window.onYouTubeIframeAPIReady = function(){
+  [1,2].forEach(p=>{
+    ytPlayers[p] = new YT.Player("yt-part"+p, {
+      width:"100%", height:"100%", videoId:YT_PARTS[p],
+      playerVars:{ rel:0, modestbranding:1, playsinline:1, origin:location.origin },
+      events:{ onStateChange:onYTState }
+    });
+  });
+  ytReady = true; ytQueue.splice(0).forEach(fn=>{ try{ fn(); }catch(e){} });
+};
+function onYTState(e){
+  if(e.data === YT.PlayerState.PLAYING){
+    pauseOthers("__video__");                                    // stop every track
+    const me = e.target;                                         // pause the sibling video
+    Object.keys(ytPlayers).forEach(p=>{ const pl=ytPlayers[p]; if(pl!==me && pl.pauseVideo) pl.pauseVideo(); });
+  }
+}
+function pauseVideos(){
+  Object.keys(ytPlayers).forEach(p=>{ const pl=ytPlayers[p]; try{ pl && pl.pauseVideo && pl.pauseVideo(); }catch(e){} });
+}
+function playPart(part, sec){
+  const go=()=>{
+    const pl = ytPlayers[part]; if(!pl) return;
+    pauseOthers("__video__");                                    // stop every track
+    Object.keys(ytPlayers).forEach(p=>{ if(+p!==+part){ const o=ytPlayers[p]; o && o.pauseVideo && o.pauseVideo(); } });
+    if(typeof sec === "number"){ try{ pl.seekTo(sec, true); }catch(e){} }
+    try{ pl.playVideo(); }catch(e){}
+    pl.getIframe && pl.getIframe().scrollIntoView({behavior:"smooth", block:"nearest"});
+  };
+  if(ytReady) go(); else ytQueue.push(go);
+}
+document.querySelectorAll(".videos .vcap").forEach(b=>{
+  b.addEventListener("click", ()=> playPart(+b.dataset.part));
+});
 
 /* ============================================================
    PASSWORD GATE
