@@ -245,6 +245,48 @@
   .barmsg.ok{color:var(--ok)}
 
   .footnote{text-align:center; color:var(--muted); font-size:12px; margin-top:30px}
+
+  /* ===== RESULTS REVEAL (voting closed 15 Jul 2026) — First Light horizon ===== */
+  .results{margin:6px 0 22px}
+  .res-card{margin:0 auto; max-width:660px; border-radius:20px; overflow:hidden; border:1px solid rgba(60,80,115,.5); box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .res-sky{position:relative;
+    background:
+      radial-gradient(190px 124px at 50% 116%, #fff4b0 0%, #ffcf7a 30%, rgba(255,138,92,.36) 56%, rgba(90,58,68,0) 72%),
+      linear-gradient(180deg, #0a1526 0%, #0a1729 48%, #0c1b32 66%, #1c1e36 80%, #43304a 91%, #6a3f45 100%);}
+  .res-top{position:relative; z-index:2; text-align:center; padding:22px 16px 8px}
+  .res-top .k{color:#ffd9a8; letter-spacing:.28em; text-transform:uppercase; font-size:9.5px; font-weight:700; text-shadow:0 1px 6px rgba(0,0,0,.5)}
+  .res-top .t{font-size:28px; font-weight:800; margin:5px 0 4px; letter-spacing:-.3px;
+    background:linear-gradient(180deg,#fff,#ffe3bd 60%,#ff9a63); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .res-closed{display:inline-block; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:#c6efd8;
+    border:1px solid rgba(95,211,166,.5); border-radius:20px; padding:3px 9px; margin-top:9px; background:rgba(7,13,24,.35)}
+  .res-list{position:relative; z-index:2; padding:6px 14px 0}
+  .res-cap{color:#ffd9a8; font-size:9px; letter-spacing:.2em; text-transform:uppercase; text-align:center; margin:2px 0 8px; opacity:.9}
+  .res-w{display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:10px}
+  .res-w:nth-child(even){background:rgba(255,255,255,.038)}
+  .res-rk{flex:0 0 auto; width:32px; display:flex; align-items:center; gap:5px}
+  .res-rk .n{font-size:12.5px; font-weight:700; color:#eaf0fb; font-variant-numeric:tabular-nums; text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .res-nm{flex:1; min-width:0; font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .res-nm span{color:rgba(234,240,251,.66); font-size:11.5px}
+  .res-v{flex:0 0 auto; font-size:13px; font-weight:800; color:#ffd9a8; text-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .res-w.top3{background:linear-gradient(90deg, rgba(255,209,138,.16), rgba(255,209,138,.03) 70%);
+    border:1px solid rgba(255,209,138,.28); border-left:3px solid var(--accent-2); margin:4px 0; padding:10px 11px}
+  .res-w.top3 .n{font-size:15px; font-weight:800; color:#fff}
+  .res-w.top3 .res-nm{font-size:14.5px; font-weight:600}
+  .res-w.top3 .res-v{font-size:16px}
+  .res-w.top3 .res-rk{width:46px}
+  .res-star{flex:0 0 auto}
+  .res-w.p1 .res-star{width:20px; height:20px; color:#ffe08a; filter:drop-shadow(0 0 6px rgba(255,205,120,.85))}
+  .res-w.p2 .res-star{width:17px; height:17px; color:#dfe7f2; filter:drop-shadow(0 0 5px rgba(210,225,245,.6))}
+  .res-w.p3 .res-star{width:16px; height:16px; color:#e6a86a; filter:drop-shadow(0 0 5px rgba(230,150,90,.6))}
+  .res-horizon{position:relative; z-index:2; text-align:center; font-size:8.5px; letter-spacing:.24em; text-transform:uppercase;
+    color:#3a1f28; font-weight:800; padding:5px 0;
+    background:linear-gradient(90deg,transparent,#ffcf8a 16%,#fff2d6 50%,#ffbb6f 84%,transparent);
+    box-shadow:0 -10px 30px 5px rgba(255,187,111,.4)}
+  .res-below{background:linear-gradient(180deg,#0a1424,#070d18); padding:13px 16px 18px}
+  .res-below .res-cap{color:#4d5f7c}
+  .res-bw{display:flex; align-items:center; gap:10px; padding:5px 10px; opacity:.72}
+  .res-bw .res-rk{width:32px} .res-bw .n{font-size:11px; color:var(--muted); font-weight:700}
+  .res-bw .res-nm{flex:1; font-size:11.5px; color:var(--muted)} .res-bw .res-v{font-size:11px; color:#4d5f7c; font-weight:700}
 </style>
 </head>
 <body>
@@ -272,6 +314,22 @@
   </header>
 
   <div id="livebar" style="display:none"></div>
+
+  <!-- ====== RESULTS REVEAL (shown when VOTING_CLOSED) ====== -->
+  <div class="results" id="results" style="display:none">
+    <div class="res-card">
+      <div class="res-sky">
+        <div class="res-top">
+          <div class="k">The vote is in</div>
+          <div class="t">Event Horizons</div>
+          <div class="res-closed">● Voting closed 15 Jul</div>
+        </div>
+        <div class="res-list"><div class="res-cap">— the final 12 —</div><div id="resList"></div></div>
+      </div>
+      <div class="res-horizon">▲ into the compilation ▲</div>
+      <div class="res-below"><div class="res-cap">just below the horizon · 3 votes</div><div id="resMiss"></div></div>
+    </div>
+  </div>
 
   <div class="howto">
     <b>How it works</b>
@@ -351,6 +409,33 @@ const LIVE = {
 };
 
 const MAX_VOTES = 3;
+
+/* ============================================================
+   VOTING CLOSED — final results (voting closed 15 Jul 2026).
+   Set VOTING_CLOSED=false to reopen the ballot. Data = the final
+   tally of 29 patron ballots (top 12 make the compilation).
+   ============================================================ */
+const VOTING_CLOSED = true;
+const RESULTS = [
+  {r:1,  ar:"Future World Machines", t:"Polaris",               v:10},
+  {r:2,  ar:"KOSU",                  t:"Wish I Never Let Go",    v:9},
+  {r:3,  ar:"Anonym",                t:"Shuffle & Cut",          v:5},
+  {r:4,  ar:"Distant Lands",         t:"Crystal Visions",        v:5},
+  {r:5,  ar:"Indo (DougieC)",        t:"Believe In Getting By",  v:5},
+  {r:6,  ar:"tdel",                  t:"E39",                    v:5},
+  {r:7,  ar:"Graish",                t:"Syrup",                  v:5},
+  {r:8,  ar:"RJ Macready",           t:"Equidistant from Mercy", v:4},
+  {r:9,  ar:"Trident",               t:"Mysteries",              v:4},
+  {r:10, ar:"AquaRelle",             t:"Lumos",                  v:4},
+  {r:11, ar:"saluu",                 t:"forever",                v:4},
+  {r:12, ar:"B-Patrol",              t:"Aligning Stars",         v:4},
+];
+const RESULTS_MISS = [
+  {r:13, ar:"Amalgam",        t:"Noble Woods",    v:3},
+  {r:14, ar:"kapellich",      t:"dolcefarniente", v:3},
+  {r:15, ar:"lego island dj", t:"swimming pool",  v:3},
+  {r:16, ar:"Newtype",        t:"Sector 9",       v:3},
+];
 
 /* ============================================================
    FINAL MIXES  (auto-generated by sync_finals.py — id -> public MP3)
@@ -468,9 +553,11 @@ function render(){
   tracksEl.innerHTML = TRACKS.map((t,i)=>{
     const fin = isFinal(t.id);
     const ph = t.placeholder && !fin;   // a submitted final overrides a missing WIP link
-    const voteCtl = ph
-      ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
-      : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`;
+    const voteCtl = VOTING_CLOSED
+      ? ``
+      : (ph
+        ? `<span class="vote disabled"><input type="checkbox" disabled> Vote</span>`
+        : `<label class="vote"><input type="checkbox" data-id="${t.id}"> Vote</label>`);
     // Every row keeps the simple slider, collapsed AND expanded. The detailed
     // waveform only appears in the dropdown panel below (big), not in the row.
     const scrub = `<div class="mini-bar" data-id="${t.id}"><div class="mini-fill"></div></div>`;
@@ -850,6 +937,23 @@ function splitLabel(label){
   return i<0 ? {artist:label, title:""} : {artist:label.slice(0,i), title:label.slice(i+3)};
 }
 
+/* ---- Results reveal (voting closed): render the final 12 + the near-misses ---- */
+function renderResults(){
+  const box = document.getElementById("results");
+  if(!box) return;
+  box.style.display = "block";
+  const STAR = '<svg class="res-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2l2.85 6.5 7.05.6-5.35 4.63 1.63 6.87L12 17.7 5.77 21.4l1.63-6.87L2.05 9.9l7.05-.6z"/></svg>';
+  const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  document.getElementById("resList").innerHTML = RESULTS.map(w=>{
+    const t3 = w.r <= 3;
+    return `<div class="res-w${t3?' top3 p'+w.r:''}"><div class="res-rk">${t3?STAR:''}<span class="n">${w.r}</span></div>`+
+      `<div class="res-nm">${esc(w.t)} <span>${esc(w.ar)}</span></div><div class="res-v">${w.v}</div></div>`;
+  }).join("");
+  document.getElementById("resMiss").innerHTML = RESULTS_MISS.map(w=>
+    `<div class="res-bw"><div class="res-rk"><span class="n">${w.r}</span></div>`+
+    `<div class="res-nm">${esc(w.t)} — ${esc(w.ar)}</div><div class="res-v">${w.v}</div></div>`).join("");
+}
+
 async function loadStandings(){
   if(!SHOW_LEADERBOARD) return;
   const box=document.getElementById("standings");
@@ -957,14 +1061,26 @@ document.querySelectorAll(".videos .vcap").forEach(b=>{
 function unlock(){
   document.getElementById("gate").style.display = "none";
   document.getElementById("page").style.display = "block";
-  document.getElementById("bar").style.display = "block";
-  render(); syncUI();
+  if(VOTING_CLOSED){
+    // Results state: show the reveal, hide the ballot-era UI (howto, live standings,
+    // sticky vote bar) and the now-stale hero subtitle. Players stay so patrons can listen.
+    renderResults();
+    const howto = document.querySelector(".howto"); if(howto) howto.style.display = "none";
+    const sub = document.querySelector(".hero .subtitle"); if(sub) sub.style.display = "none";
+    const title = document.querySelector(".hero .title"); if(title) title.style.display = "none";
+  } else {
+    document.getElementById("bar").style.display = "block";
+  }
+  render();
+  if(!VOTING_CLOSED) syncUI();
   renderLiveBanner();
   preloadFinals();   // warm native audio for instant first play of finals
   preloadMinis();    // warm SoundCloud embeds
   requestAnimationFrame(drawAllWaves);   // draw waveforms once layout has width
-  loadStandings();
-  if(SHOW_LEADERBOARD && LEADERBOARD_CSV) setInterval(loadStandings, 30000);
+  if(!VOTING_CLOSED){
+    loadStandings();
+    if(SHOW_LEADERBOARD && LEADERBOARD_CSV) setInterval(loadStandings, 30000);
+  }
 }
 function tryUnlock(){
   const v = document.getElementById("gateInput").value.trim();
