@@ -263,21 +263,17 @@
   .res-cap{color:#ffd9a8; font-size:9px; letter-spacing:.2em; text-transform:uppercase; text-align:center; margin:2px 0 8px; opacity:.9}
   .res-w{display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:10px}
   .res-w:nth-child(even){background:rgba(255,255,255,.038)}
-  .res-rk{flex:0 0 auto; width:32px; display:flex; align-items:center; gap:5px}
+  .res-rk{flex:0 0 auto; width:44px; display:flex; align-items:center; gap:6px}
   .res-rk .n{font-size:12.5px; font-weight:700; color:#eaf0fb; font-variant-numeric:tabular-nums; text-shadow:0 1px 3px rgba(0,0,0,.5)}
   .res-nm{flex:1; min-width:0; font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 3px rgba(0,0,0,.5)}
   .res-nm span{color:rgba(234,240,251,.66); font-size:11.5px}
   .res-v{flex:0 0 auto; font-size:13px; font-weight:800; color:#ffd9a8; text-shadow:0 1px 4px rgba(0,0,0,.5)}
-  .res-w.top3{background:linear-gradient(90deg, rgba(255,209,138,.16), rgba(255,209,138,.03) 70%);
-    border:1px solid rgba(255,209,138,.28); margin:4px 0; padding:10px 11px}
-  .res-w.top3 .n{font-size:15px; font-weight:800; color:#fff}
-  .res-w.top3 .res-nm{font-size:14.5px; font-weight:600}
-  .res-w.top3 .res-v{font-size:16px}
-  .res-w.top3 .res-rk{width:46px}
+  /* top 3 differ ONLY by a coloured star — no row box, no enlargement, no heavy FX */
+  .res-starslot{flex:0 0 auto; width:16px; display:flex; align-items:center; justify-content:center}
   .res-star{flex:0 0 auto}
-  .res-w.p1 .res-star{width:20px; height:20px; color:#ffe08a; filter:drop-shadow(0 0 6px rgba(255,205,120,.85))}
-  .res-w.p2 .res-star{width:17px; height:17px; color:#dfe7f2; filter:drop-shadow(0 0 5px rgba(210,225,245,.6))}
-  .res-w.p3 .res-star{width:16px; height:16px; color:#e6a86a; filter:drop-shadow(0 0 5px rgba(230,150,90,.6))}
+  .res-w.p1 .res-star{width:15px; height:15px; color:#ffe08a; filter:drop-shadow(0 0 4px rgba(255,205,120,.7))}
+  .res-w.p2 .res-star{width:14px; height:14px; color:#dfe7f2; filter:drop-shadow(0 0 3px rgba(210,225,245,.5))}
+  .res-w.p3 .res-star{width:14px; height:14px; color:#e6a86a; filter:drop-shadow(0 0 3px rgba(230,150,90,.5))}
   .res-horizon{position:relative; z-index:2; text-align:center; font-size:10px; letter-spacing:.24em; text-transform:uppercase;
     color:#3a1f28; font-weight:800; padding:6px 0; margin-top:0;
     background:linear-gradient(90deg,transparent,#ffcf8a 16%,#fff2d6 50%,#ffbb6f 84%,transparent);
@@ -285,7 +281,7 @@
   .res-below{background:linear-gradient(180deg,#0a1424,#070d18); padding:13px 16px 18px}
   .res-below .res-cap{color:#4d5f7c}
   .res-bw{display:flex; align-items:center; gap:10px; padding:5px 10px; opacity:.72}
-  .res-bw .res-rk{width:32px} .res-bw .n{font-size:11px; color:var(--muted); font-weight:700}
+  .res-bw .res-rk{width:44px} .res-bw .n{font-size:11px; color:var(--muted); font-weight:700}
   .res-bw .res-nm{flex:1; font-size:11.5px; color:var(--muted)} .res-bw .res-v{font-size:11px; color:#4d5f7c; font-weight:700}
 </style>
 </head>
@@ -946,11 +942,11 @@ function renderResults(){
   const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
   document.getElementById("resList").innerHTML = RESULTS.map(w=>{
     const t3 = w.r <= 3;
-    return `<div class="res-w${t3?' top3 p'+w.r:''}"><div class="res-rk">${t3?STAR:''}<span class="n">${w.r}</span></div>`+
+    return `<div class="res-w${t3?' p'+w.r:''}"><div class="res-rk"><span class="res-starslot">${t3?STAR:''}</span><span class="n">${w.r}</span></div>`+
       `<div class="res-nm">${esc(w.t)} <span>${esc(w.ar)}</span></div><div class="res-v">${w.v}</div></div>`;
   }).join("");
   document.getElementById("resMiss").innerHTML = RESULTS_MISS.map(w=>
-    `<div class="res-bw"><div class="res-rk"><span class="n">${w.r}</span></div>`+
+    `<div class="res-bw"><div class="res-rk"><span class="res-starslot"></span><span class="n">${w.r}</span></div>`+
     `<div class="res-nm">${esc(w.t)} — ${esc(w.ar)}</div><div class="res-v">${w.v}</div></div>`).join("");
 }
 
